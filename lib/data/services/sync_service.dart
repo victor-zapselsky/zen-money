@@ -1,0 +1,63 @@
+import 'package:sqflite/sqflite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../database/database_helper.dart';
+import 'auth_service.dart';
+
+class SyncService {
+  static SupabaseClient get _sb => Supabase.instance.client;
+
+  // Order matters: categories/accounts before transactions (FK deps)
+  static const _tables = [
+    'categories',
+    'accounts',
+    'transactions',
+    'budgets',
+    'goals',
+  ];
+
+  /// Pushes all local SQLite data to Supabase (upsert by id + user_id).
+  static Future<void> pushToCloud(DatabaseHelper dbHelper) async {
+    if (!AuthService.isLoggedIn) return;
+    final userId = AuthService.currentUser!.id;
+    final db = await dbHelper.database;
+
+    for (final table in _tables) {
+      final rows = await db.query(table);
+      if (rows.isEmpty) continue;
+      final records = rows
+          .map((r) => {...Map<String, dynamic>.from(r), 'user_id': userId})
+          .toList();
+      await _sb.from(table).upsert(records);
+    }
+  }
+
+  /// Pulls cloud data for this user into local SQLite (replaces local data).
+  static Future<bool> pullFromCloud(DatabaseHelper dbHelper) async {
+    if (!AuthService.isLoggedIn) return false;
+    final userId = AuthService.currentUser!.id;
+    final db = await dbHelper.database;
+
+    bool hadData = false;
+    for (final table in _tables) {
+      final List<dynamic> records =
+          await _sb.from(table).select().eq('user_id', userId);
+      if (records.isEmpty) continue;
+      hadData = true;
+
+      await db.transaction((txn) async {
+        await txn.delete(table);
+        for (final rec in records) {
+          final row = Map<String, dynamic>.from(rec as Map)
+            ..remove('user_id')
+            ..remove('updated_at');
+          await txn.insert(
+            table,
+            row,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      });
+    }
+    return hadData;
+  }
+}
