@@ -1,4 +1,4 @@
-package com.example.zen_money
+package com.example.kubushka
 
 import io.flutter.embedding.android.FlutterActivity
 
