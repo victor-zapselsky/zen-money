@@ -46,12 +46,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await AuthService.signIn(email, pass);
       final dbHelper = ref.read(databaseHelperProvider);
-      // Always pull cloud data on login — new device gets existing data from cloud
-      final hadCloudData = await SyncService.pullFromCloud(dbHelper);
-      if (!hadCloudData) {
-        // No cloud data for this account yet — push local as initial sync
-        await SyncService.pushToCloud(dbHelper);
-      }
+      // Push local data first so it gets associated with the account
+      await SyncService.pushToCloud(dbHelper);
+      // Then pull to merge with any existing cloud data
+      await SyncService.pullFromCloud(dbHelper);
       // Refresh non-autoDispose providers so UI shows the pulled data
       ref.invalidate(journalProvider);
       ref.invalidate(monthlySummaryProvider);

@@ -166,7 +166,7 @@ class _OnboardingPage extends StatelessWidget {
           Text(
             data.subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: AppColors.inkSoft, height: 1.5),
+            style: const TextStyle(fontSize: 15, color: AppColors.inkSoft, height: 1.5),
           ),
         ],
       ),

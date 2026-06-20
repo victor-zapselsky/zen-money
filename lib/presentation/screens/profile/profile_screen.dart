@@ -280,7 +280,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 if (!isLoggedIn) ...[
                   const SizedBox(height: 4),
                   TextButton(
-                    onPressed: () => context.go('/login'),
+                    onPressed: () => context.push('/login'),
                     child: Text(L10n.loginOrRegister,
                         style: const TextStyle(
                             color: AppColors.primary, fontSize: 13)),

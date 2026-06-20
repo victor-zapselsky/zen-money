@@ -20,7 +20,15 @@ class CategoryAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       alignment: Alignment.center,
-      child: Text(icon, style: TextStyle(fontSize: size * 0.45)),
+      child: Text(
+        icon,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: size * 0.45,
+          height: 1.0,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+      ),
     );
   }
 
