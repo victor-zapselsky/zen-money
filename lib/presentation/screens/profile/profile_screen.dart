@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/database/database_helper.dart';
@@ -27,6 +30,79 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _syncing = false;
+  String? _localName;
+  String? _photoPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _localName = prefs.getString('profile_name');
+        _photoPath = prefs.getString('profile_photo');
+      });
+    }
+  }
+
+  // ── Profile editing ────────────────────────────────────────────────────────
+
+  Future<void> _editName() async {
+    final ctrl = TextEditingController(
+      text: _localName ?? (AuthService.isLoggedIn ? AuthService.userDisplayName : ''),
+    );
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Изменить имя'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLength: 30,
+          decoration: const InputDecoration(hintText: 'Ваше имя'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_name', result);
+      setState(() => _localName = result);
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 400,
+    );
+    if (picked == null || !mounted) return;
+    final dir = await getApplicationDocumentsDirectory();
+    final dest = File('${dir.path}/profile_avatar.jpg');
+    await File(picked.path).copy(dest.path);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_photo', dest.path);
+    if (mounted) setState(() => _photoPath = dest.path);
+  }
 
   // ── Sync ────────────────────────────────────────────────────────────────────
 
@@ -226,6 +302,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  // ── About ──────────────────────────────────────────────────────────────────
+
+  Future<void> _rateApp() async {
+    final review = InAppReview.instance;
+    if (await review.isAvailable()) {
+      await review.requestReview();
+    } else {
+      await review.openStoreListing();
+    }
+  }
+
+  Future<void> _contactDev() async {
+    final uri = Uri.parse('https://t.me/zapselsky_v');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   String _formatSyncTime(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
@@ -246,6 +340,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final isLoggedIn = user != null;
     final langLabel = settings.locale == 'en' ? 'English' : 'Русский';
 
+    final displayName = _localName ??
+        (isLoggedIn ? AuthService.userDisplayName : L10n.guest);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -262,12 +359,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                _buildAvatar(isLoggedIn),
+                _buildAvatar(),
                 const SizedBox(height: 12),
-                Text(
-                  isLoggedIn ? AuthService.userDisplayName : L10n.guest,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w700),
+                GestureDetector(
+                  onTap: _editName,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.edit_outlined,
+                          size: 16, color: AppColors.inkSoft),
+                    ],
+                  ),
                 ),
                 if (isLoggedIn && AuthService.userEmail != null) ...[
                   const SizedBox(height: 2),
@@ -332,8 +440,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 _section(L10n.aboutSection, [
                   _row(Icons.info_outline, L10n.version, trailing: '1.0.0'),
-                  _row(Icons.star_outline, L10n.rateApp, onTap: () {}),
-                  _row(Icons.feedback_outlined, L10n.contactUs, onTap: () {}),
+                  _row(Icons.star_outline, L10n.rateApp, onTap: _rateApp),
+                  _row(Icons.telegram, 'Написать разработчику',
+                      onTap: _contactDev),
                 ]),
                 const SizedBox(height: 24),
 
@@ -398,34 +507,59 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Widget _buildAvatar(bool isLoggedIn) {
-    if (isLoggedIn) {
-      final initials = (AuthService.userDisplayName.isNotEmpty)
-          ? AuthService.userDisplayName[0].toUpperCase()
-          : '?';
-      return Container(
-        width: 80,
-        height: 80,
-        decoration: const BoxDecoration(
-            color: AppColors.primary, shape: BoxShape.circle),
-        alignment: Alignment.center,
-        child: Text(initials,
-            style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Colors.white)),
-      );
-    }
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: const BoxDecoration(
-          color: AppColors.primaryGhost, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: const Text('😊', style: TextStyle(fontSize: 40)),
+  Widget _buildAvatar() {
+    final hasPhoto = _photoPath != null && File(_photoPath!).existsSync();
+    return GestureDetector(
+      onTap: _pickPhoto,
+      child: Stack(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primaryGhost,
+              shape: BoxShape.circle,
+              image: hasPhoto
+                  ? DecorationImage(
+                      image: FileImage(File(_photoPath!)),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            alignment: Alignment.center,
+            child: hasPhoto
+                ? null
+                : (AuthService.isLoggedIn
+                    ? Text(
+                        AuthService.userDisplayName.isNotEmpty
+                            ? AuthService.userDisplayName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary),
+                      )
+                    : const Text('😊', style: TextStyle(fontSize: 40))),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surface, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.camera_alt, size: 11, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

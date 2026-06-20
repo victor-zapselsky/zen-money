@@ -180,11 +180,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
                   controller: _amountCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   autofocus: true,
+                  maxLength: 10,
                   style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                   decoration: InputDecoration(
                     hintText: '0',
                     hintStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                     border: InputBorder.none,
+                    counterText: '',
                     prefixText: '$currency ',
                     prefixStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                   ),
@@ -300,9 +302,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
                 const SizedBox(height: 12),
                 TextField(
                   controller: _noteCtrl,
+                  maxLength: 150,
                   decoration: InputDecoration(
                     hintText: L10n.note,
                     border: InputBorder.none,
+                    counterText: '',
                     hintStyle: const TextStyle(color: AppColors.inkSoft),
                   ),
                 ),
