@@ -187,6 +187,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
                   style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                   decoration: InputDecoration(
                     hintText: '0',
+                    hintStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                     border: InputBorder.none,
                     prefixText: '$currency ',
                     prefixStyle: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),

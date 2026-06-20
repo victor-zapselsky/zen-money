@@ -11,6 +11,8 @@ class AppSettings {
   final String locale;
   final bool syncEnabled;
   final DateTime? lastSyncAt;
+  // Multiplier: db_base_amount * displayRate = amount_in_selected_currency
+  final double displayRate;
 
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -19,6 +21,7 @@ class AppSettings {
     this.locale = 'ru',
     this.syncEnabled = false,
     this.lastSyncAt,
+    this.displayRate = 1.0,
   });
 
   AppSettings copyWith({
@@ -28,6 +31,7 @@ class AppSettings {
     String? locale,
     bool? syncEnabled,
     DateTime? lastSyncAt,
+    double? displayRate,
   }) =>
       AppSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -36,6 +40,7 @@ class AppSettings {
         locale: locale ?? this.locale,
         syncEnabled: syncEnabled ?? this.syncEnabled,
         lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+        displayRate: displayRate ?? this.displayRate,
       );
 }
 
@@ -59,6 +64,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       lastSyncAt: prefs.getString('last_sync_at') != null
           ? DateTime.tryParse(prefs.getString('last_sync_at')!)
           : null,
+      displayRate: prefs.getDouble('display_rate') ?? 1.0,
     );
   }
 
@@ -73,6 +79,16 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     await prefs.setString('currency', symbol);
     await prefs.setString('currency_code', code);
     state = state.copyWith(currency: symbol, currencyCode: code);
+  }
+
+  // rateNewPerOld: how many OLD currency units = 1 NEW currency unit (e.g. 90 for USD→RUB)
+  Future<void> setCurrencyWithRate(String symbol, String code, double rateNewPerOld) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('currency', symbol);
+    await prefs.setString('currency_code', code);
+    final newDisplayRate = state.displayRate / rateNewPerOld;
+    await prefs.setDouble('display_rate', newDisplayRate);
+    state = state.copyWith(currency: symbol, currencyCode: code, displayRate: newDisplayRate);
   }
 
   Future<void> setLocale(String locale) async {

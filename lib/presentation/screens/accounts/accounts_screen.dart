@@ -16,7 +16,7 @@ class AccountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(settingsProvider); // rebuild on locale/currency change
     final accountsAsync = ref.watch(accountsProvider);
-    final totalAsync = ref.watch(totalBalanceProvider);
+    final totalAsync = ref.watch(displayTotalBalanceProvider);
     final mainCurrency = ref.watch(settingsProvider).currency;
 
     return Scaffold(

@@ -31,9 +31,9 @@ class TransactionTile extends StatelessWidget {
         tx.categoryName ?? 'Без категории',
         style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
-      subtitle: tx.note != null || tx.accountName != null
+      subtitle: tx.accountName != null
           ? Text(
-              tx.note ?? tx.accountName ?? '',
+              tx.accountName!,
               style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
             )
           : null,

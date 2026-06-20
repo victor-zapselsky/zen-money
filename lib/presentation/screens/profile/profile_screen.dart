@@ -419,8 +419,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           final (symbol, code, label) = c;
           return SimpleDialogOption(
             onPressed: () {
-              ref.read(settingsProvider.notifier).setCurrency(symbol, code);
               Navigator.pop(ctx);
+              if (symbol == current) return;
+              _showRateDialog(current, symbol, code);
             },
             child: Row(children: [
               Expanded(child: Text(label)),
@@ -429,6 +430,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ]),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  void _showRateDialog(String oldSymbol, String newSymbol, String newCode) {
+    final rateCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Курс конвертации'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Введите: 1 $newSymbol = ? $oldSymbol',
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: rateCtrl,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                hintText: 'Например: 90',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ref.read(settingsProvider.notifier).setCurrency(newSymbol, newCode);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Пропустить'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(80, 36),
+            ),
+            onPressed: () {
+              final rate = double.tryParse(rateCtrl.text.replaceAll(',', '.'));
+              if (rate != null && rate > 0) {
+                ref.read(settingsProvider.notifier).setCurrencyWithRate(newSymbol, newCode, rate);
+              } else {
+                ref.read(settingsProvider.notifier).setCurrency(newSymbol, newCode);
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Применить'),
+          ),
+        ],
       ),
     );
   }

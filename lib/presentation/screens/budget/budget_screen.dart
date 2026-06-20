@@ -20,7 +20,9 @@ class BudgetScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(selectedMonthProvider);
     final budgetsAsync = ref.watch(budgetProvider);
-    final currency = ref.watch(settingsProvider).currency;
+    final settings = ref.watch(settingsProvider);
+    final currency = settings.currency;
+    final displayRate = settings.displayRate;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,14 +61,15 @@ class BudgetScreen extends ConsumerWidget {
               if (budgets.isEmpty) {
                 return const SliverFillRemaining(child: _EmptyBudget());
               }
-              final totalLimit = budgets.fold(0.0, (s, b) => s + b.limitAmount);
-              final totalSpent = budgets.fold(0.0, (s, b) => s + b.spentAmount);
+              final totalLimit = budgets.fold(0.0, (s, b) => s + b.limitAmount) * displayRate;
+              final totalSpent = budgets.fold(0.0, (s, b) => s + b.spentAmount) * displayRate;
               return SliverList(
                 delegate: SliverChildListDelegate([
                   _TotalCard(limit: totalLimit, spent: totalSpent, currency: currency),
                   ...budgets.map((b) => _BudgetCard(
                     budget: b,
                     currency: currency,
+                    displayRate: displayRate,
                     onDelete: () async {
                       await ref.read(budgetRepositoryProvider).delete(b.id!);
                       ref.invalidate(budgetProvider);
@@ -193,9 +196,10 @@ class _TotalCard extends StatelessWidget {
 class _BudgetCard extends StatelessWidget {
   final BudgetModel budget;
   final String currency;
+  final double displayRate;
   final VoidCallback? onDelete;
   final VoidCallback? onEditLimit;
-  const _BudgetCard({required this.budget, required this.currency, this.onDelete, this.onEditLimit});
+  const _BudgetCard({required this.budget, required this.currency, this.displayRate = 1.0, this.onDelete, this.onEditLimit});
 
   @override
   Widget build(BuildContext context) {
@@ -235,10 +239,10 @@ class _BudgetCard extends StatelessWidget {
                 ProgressBar(value: budget.percent / 100),
                 const SizedBox(height: 6),
                 Row(children: [
-                  Text(Fmt.money(budget.spentAmount, currency: currency),
+                  Text(Fmt.money(budget.spentAmount * displayRate, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                   const Spacer(),
-                  Text(Fmt.money(budget.limitAmount, currency: currency),
+                  Text(Fmt.money(budget.limitAmount * displayRate, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                 ]),
               ],
@@ -425,6 +429,7 @@ class _AddBudgetSheetState extends ConsumerState<_AddBudgetSheet> {
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               decoration: InputDecoration(
                 hintText: '0',
+                hintStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
                 border: InputBorder.none,
                 prefixText: '${ref.read(settingsProvider).currency} ',
                 prefixStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),

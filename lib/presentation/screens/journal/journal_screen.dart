@@ -16,7 +16,7 @@ class JournalScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(selectedMonthProvider);
     final txAsync = ref.watch(journalProvider);
-    final summaryAsync = ref.watch(monthlySummaryProvider);
+    final summaryAsync = ref.watch(displayMonthlySummaryProvider);
     final currency = ref.watch(settingsProvider).currency;
 
     return Scaffold(

@@ -18,7 +18,9 @@ class AccountRepository {
 
   Future<double> getTotalBalance() async {
     final db = await _db.database;
-    final result = await db.rawQuery('SELECT SUM(balance) as total FROM accounts');
+    final result = await db.rawQuery(
+      'SELECT SUM(balance * COALESCE(exchange_rate, 1.0)) as total FROM accounts',
+    );
     return (result.first['total'] as num? ?? 0).toDouble();
   }
 
