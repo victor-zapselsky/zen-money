@@ -364,12 +364,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Future<void> _contactDev() async {
-    final uri = Uri.parse('https://t.me/zapselsky_v');
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
+
+  Future<void> _contactDev() => _openUrl('https://t.me/zapselsky_v');
 
   String _formatSyncTime(DateTime dt) {
     final now = DateTime.now();
@@ -492,6 +494,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _section(L10n.aboutSection, [
                   _row(Icons.info_outline, L10n.version, trailing: '1.0.0'),
                   _row(Icons.star_outline, L10n.rateApp, onTap: _rateApp),
+                  _row(Icons.privacy_tip_outlined, 'Политика конфиденциальности',
+                      onTap: () => _openUrl('https://victor-zapselsky.github.io/zen-money/legal/privacy_policy.html')),
+                  _row(Icons.description_outlined, 'Пользовательское соглашение',
+                      onTap: () => _openUrl('https://victor-zapselsky.github.io/zen-money/legal/terms.html')),
                   _row(Icons.telegram, 'Написать разработчику',
                       onTap: _contactDev),
                 ]),
