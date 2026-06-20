@@ -439,9 +439,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         fontSize: 13, color: AppColors.inkSoft),
                   ),
                 ],
-                if (isLoggedIn && !AuthService.isEmailVerified) ...[
+                if (isLoggedIn && user?.emailConfirmedAt == null) ...[
                   const SizedBox(height: 10),
-                  _EmailVerificationBanner(email: AuthService.userEmail ?? ''),
+                  _EmailVerificationBanner(email: user?.email ?? ''),
                 ],
                 if (!isLoggedIn) ...[
                   const SizedBox(height: 4),

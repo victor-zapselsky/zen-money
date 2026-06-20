@@ -62,7 +62,7 @@ Future<String?> _guard(BuildContext context, GoRouterState state) async {
   final onboarded = prefs.getBool('onboarded') ?? false;
   final path = state.matchedLocation;
 
-  if (!onboarded && !path.startsWith('/onboarding') && path != '/login' && path != '/register') return '/onboarding';
+  if (!onboarded && !path.startsWith('/onboarding') && path != '/login' && path != '/register' && path != '/forgot-password' && path != '/reset-password') return '/onboarding';
   if (onboarded && path.startsWith('/onboarding'))  return '/journal';
   return null;
 }
