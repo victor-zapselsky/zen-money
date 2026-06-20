@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:appmetrica_sdk/appmetrica_sdk.dart';
 
 class AnalyticsService {
@@ -13,8 +14,9 @@ class AnalyticsService {
   static Future<void> _send(String name, [Map<String, dynamic>? params]) async {
     try {
       await _sdk.reportEvent(name: name, attributes: params);
-    } catch (_) {
-      // never crash the app due to analytics
+      await _sdk.sendEventsBuffer();
+    } catch (e) {
+      debugPrint('[Analytics] error sending "$name": $e');
     }
   }
 
