@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 390px; height: 844px; background: #F0F0F5; font-family: -apple-system, 'SF Pro Display', sans-serif; overflow: hidden; position: relative; }
+
+  .appbar {
+    background: white; padding: 56px 20px 14px;
+    font-size: 22px; font-weight: 800; color: #1A1A2E;
+  }
+
+  .period-tabs {
+    background: white; padding: 0 16px 14px;
+    display: flex; gap: 8px;
+  }
+  .tab {
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    background: #EEF; color: #9E9EB0;
+  }
+  .tab.active { background: #433DCB; color: white; }
+
+  .pie-card {
+    margin: 10px 16px; background: white; border-radius: 18px; padding: 18px;
+  }
+  .pie-title { font-size: 13px; color: #9E9EB0; margin-bottom: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pie-wrap { display: flex; align-items: center; gap: 20px; }
+  .pie { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+  .pie svg { transform: rotate(-90deg); }
+  .pie-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .pie-center .big { font-size: 17px; font-weight: 800; color: #1A1A2E; }
+  .pie-center .small { font-size: 10px; color: #9E9EB0; }
+
+  .legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { flex: 1; font-size: 12px; color: #1A1A2E; }
+  .legend-pct { font-size: 12px; font-weight: 700; color: #1A1A2E; }
+
+  .bar-card {
+    margin: 10px 16px; background: white; border-radius: 18px; padding: 18px;
+  }
+  .bar-title { font-size: 13px; color: #9E9EB0; margin-bottom: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 90px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-inner { width: 100%; border-radius: 6px 6px 0 0; }
+  .bar-label { font-size: 10px; color: #9E9EB0; }
+
+  .tagline {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: #433DCB;
+    padding: 20px 24px 36px;
+    text-align: center;
+  }
+  .tagline h2 { color: white; font-size: 19px; font-weight: 800; line-height: 1.3; }
+  .tagline p { color: rgba(255,255,255,0.75); font-size: 13px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="appbar">Отчёты</div>
+
+<div class="period-tabs">
+  <div class="tab">Неделя</div>
+  <div class="tab active">Месяц</div>
+  <div class="tab">Год</div>
+</div>
+
+<div class="pie-card">
+  <div class="pie-title">Структура расходов</div>
+  <div class="pie-wrap">
+    <div class="pie">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#EEF0FF" stroke-width="16"/>
+        <!-- Products 30% -->
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#433DCB" stroke-width="16"
+          stroke-dasharray="79 185" stroke-dashoffset="0"/>
+        <!-- Cafe 20% -->
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#7B73E4" stroke-width="16"
+          stroke-dasharray="53 211" stroke-dashoffset="-79"/>
+        <!-- Transport 25% -->
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#27AE60" stroke-width="16"
+          stroke-dasharray="66 198" stroke-dashoffset="-132"/>
+        <!-- Health 15% -->
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#F39C12" stroke-width="16"
+          stroke-dasharray="40 224" stroke-dashoffset="-198"/>
+        <!-- Other 10% -->
+        <circle cx="55" cy="55" r="42" fill="none" stroke="#E74C3C" stroke-width="16"
+          stroke-dasharray="26 238" stroke-dashoffset="-238"/>
+      </svg>
+      <div class="pie-center">
+        <div class="big">47 830</div>
+        <div class="small">₽ всего</div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#433DCB;"></div>
+        <div class="legend-name">Продукты</div>
+        <div class="legend-pct">30%</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#7B73E4;"></div>
+        <div class="legend-name">Кафе</div>
+        <div class="legend-pct">20%</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#27AE60;"></div>
+        <div class="legend-name">Транспорт</div>
+        <div class="legend-pct">25%</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#F39C12;"></div>
+        <div class="legend-name">Здоровье</div>
+        <div class="legend-pct">15%</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#E74C3C;"></div>
+        <div class="legend-name">Прочее</div>
+        <div class="legend-pct">10%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bar-card">
+  <div class="bar-title">Расходы по месяцам</div>
+  <div class="bars">
+    <div class="bar-col">
+      <div class="bar-inner" style="height:42px; background:#D8D6F8;"></div>
+      <div class="bar-label">Янв</div>
+    </div>
+    <div class="bar-col">
+      <div class="bar-inner" style="height:55px; background:#D8D6F8;"></div>
+      <div class="bar-label">Фев</div>
+    </div>
+    <div class="bar-col">
+      <div class="bar-inner" style="height:38px; background:#D8D6F8;"></div>
+      <div class="bar-label">Мар</div>
+    </div>
+    <div class="bar-col">
+      <div class="bar-inner" style="height:62px; background:#D8D6F8;"></div>
+      <div class="bar-label">Апр</div>
+    </div>
+    <div class="bar-col">
+      <div class="bar-inner" style="height:48px; background:#D8D6F8;"></div>
+      <div class="bar-label">Май</div>
+    </div>
+    <div class="bar-col">
+      <div class="bar-inner" style="height:72px; background:#433DCB;"></div>
+      <div class="bar-label">Июн</div>
+    </div>
+  </div>
+</div>
+
+<div class="tagline">
+  <h2>Наглядная аналитика</h2>
+  <p>Узнай, куда уходят деньги, и найди точки роста</p>
+</div>
+
+</body>
+</html>
