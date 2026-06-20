@@ -2,7 +2,7 @@ import 'package:appmetrica_sdk/appmetrica_sdk.dart';
 
 class AnalyticsService {
   // Получить API Key на appmetrica.yandex.ru → Приложения → Ключ API
-  static const _apiKey = 'REPLACE_WITH_YOUR_APPMETRICA_API_KEY';
+  static const _apiKey = 'fbead890-a3f1-4713-a056-c56f106d94f1';
 
   static final _sdk = AppmetricaSdk();
 
