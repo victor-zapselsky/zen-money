@@ -47,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await AuthService.signIn(email, pass);
       final dbHelper = ref.read(databaseHelperProvider);
-      await dbHelper.clearAllData();
+      await SyncService.pushToCloud(dbHelper);
       await SyncService.pullFromCloud(dbHelper);
       ref.invalidate(journalProvider);
       ref.invalidate(monthlySummaryProvider);
