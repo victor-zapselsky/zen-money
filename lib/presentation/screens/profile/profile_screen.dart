@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme/colors.dart';
@@ -84,6 +85,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (result != null && result.isNotEmpty && mounted) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('profile_name', result);
+      if (AuthService.isLoggedIn) {
+        try {
+          await Supabase.instance.client.auth.updateUser(
+            UserAttributes(data: {'full_name': result}),
+          );
+        } catch (_) {}
+      }
       setState(() => _localName = result);
     }
   }
