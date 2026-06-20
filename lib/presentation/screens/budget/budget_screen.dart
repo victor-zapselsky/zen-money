@@ -9,7 +9,7 @@ import '../../../data/repositories/budget_repository.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/journal_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/settings_provider.dart' show AppSettings;
 import '../../widgets/category_avatar.dart';
 import '../../widgets/progress_bar.dart';
 
@@ -20,9 +20,7 @@ class BudgetScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(selectedMonthProvider);
     final budgetsAsync = ref.watch(budgetProvider);
-    final settings = ref.watch(settingsProvider);
-    final currency = settings.currency;
-    final displayRate = settings.displayRate;
+    const currency = AppSettings.currency;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -61,15 +59,14 @@ class BudgetScreen extends ConsumerWidget {
               if (budgets.isEmpty) {
                 return const SliverFillRemaining(child: _EmptyBudget());
               }
-              final totalLimit = budgets.fold(0.0, (s, b) => s + b.limitAmount) * displayRate;
-              final totalSpent = budgets.fold(0.0, (s, b) => s + b.spentAmount) * displayRate;
+              final totalLimit = budgets.fold(0.0, (s, b) => s + b.limitAmount);
+              final totalSpent = budgets.fold(0.0, (s, b) => s + b.spentAmount);
               return SliverList(
                 delegate: SliverChildListDelegate([
                   _TotalCard(limit: totalLimit, spent: totalSpent, currency: currency),
                   ...budgets.map((b) => _BudgetCard(
                     budget: b,
                     currency: currency,
-                    displayRate: displayRate,
                     onDelete: () async {
                       await ref.read(budgetRepositoryProvider).delete(b.id!);
                       ref.invalidate(budgetProvider);
@@ -196,10 +193,9 @@ class _TotalCard extends StatelessWidget {
 class _BudgetCard extends StatelessWidget {
   final BudgetModel budget;
   final String currency;
-  final double displayRate;
   final VoidCallback? onDelete;
   final VoidCallback? onEditLimit;
-  const _BudgetCard({required this.budget, required this.currency, this.displayRate = 1.0, this.onDelete, this.onEditLimit});
+  const _BudgetCard({required this.budget, required this.currency, this.onDelete, this.onEditLimit});
 
   @override
   Widget build(BuildContext context) {
@@ -239,10 +235,10 @@ class _BudgetCard extends StatelessWidget {
                 ProgressBar(value: budget.percent / 100),
                 const SizedBox(height: 6),
                 Row(children: [
-                  Text(Fmt.money(budget.spentAmount * displayRate, currency: currency),
+                  Text(Fmt.money(budget.spentAmount, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                   const Spacer(),
-                  Text(Fmt.money(budget.limitAmount * displayRate, currency: currency),
+                  Text(Fmt.money(budget.limitAmount, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                 ]),
               ],
@@ -431,7 +427,7 @@ class _AddBudgetSheetState extends ConsumerState<_AddBudgetSheet> {
                 hintText: '0',
                 hintStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
                 border: InputBorder.none,
-                prefixText: '${ref.read(settingsProvider).currency} ',
+                prefixText: '${AppSettings.currency} ',
                 prefixStyle: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               ),
             ),

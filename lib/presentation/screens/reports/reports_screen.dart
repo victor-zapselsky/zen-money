@@ -7,7 +7,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/reports_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/settings_provider.dart' show AppSettings;
 import '../../widgets/category_avatar.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -19,7 +19,7 @@ class ReportsScreen extends ConsumerWidget {
     final type       = ref.watch(reportTypeProvider);
     final chartAsync = ref.watch(chartDataProvider);
     final catAsync   = ref.watch(categorySpendingProvider);
-    final currency   = ref.watch(settingsProvider).currency;
+    const currency   = AppSettings.currency;
     final month      = ref.watch(selectedMonthProvider);
 
     return Scaffold(

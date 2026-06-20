@@ -291,11 +291,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _section(L10n.appSection, [
                   _row(Icons.language_outlined, L10n.language,
                       trailing: langLabel,
-                      onTap: () =>
-                          _showLanguagePicker(settings.locale)),
-                  _row(Icons.attach_money_outlined, L10n.currency,
-                      trailing: '${settings.currency} ${settings.currencyCode}',
-                      onTap: () => _showCurrencyPicker(settings.currency)),
+                      onTap: () => _showLanguagePicker(settings.locale)),
                 ]),
                 const SizedBox(height: 12),
 
@@ -402,94 +398,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showCurrencyPicker(String current) {
-    const currencies = [
-      ('₽', 'RUB', '🇷🇺  Рубль (₽)'),
-      ('\$', 'USD', '🇺🇸  Доллар (\$)'),
-      ('€', 'EUR', '🇪🇺  Евро (€)'),
-      ('£', 'GBP', '🇬🇧  Фунт (£)'),
-      ('¥', 'JPY', '🇯🇵  Иена (¥)'),
-      ('₸', 'KZT', '🇰🇿  Тенге (₸)'),
-    ];
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Валюта'),
-        children: currencies.map((c) {
-          final (symbol, code, label) = c;
-          return SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(ctx);
-              if (symbol == current) return;
-              _showRateDialog(current, symbol, code);
-            },
-            child: Row(children: [
-              Expanded(child: Text(label)),
-              if (current == symbol)
-                const Icon(Icons.check, color: AppColors.primary, size: 18),
-            ]),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void _showRateDialog(String oldSymbol, String newSymbol, String newCode) {
-    final rateCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Курс конвертации'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Введите: 1 $newSymbol = ? $oldSymbol',
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: rateCtrl,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                hintText: 'Например: 90',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              ref.read(settingsProvider.notifier).setCurrency(newSymbol, newCode);
-              Navigator.pop(ctx);
-            },
-            child: const Text('Пропустить'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(80, 36),
-            ),
-            onPressed: () {
-              final rate = double.tryParse(rateCtrl.text.replaceAll(',', '.'));
-              if (rate != null && rate > 0) {
-                ref.read(settingsProvider.notifier).setCurrencyWithRate(newSymbol, newCode, rate);
-              } else {
-                ref.read(settingsProvider.notifier).setCurrency(newSymbol, newCode);
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Применить'),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 

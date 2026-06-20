@@ -7,17 +7,15 @@ import '../../../data/models/account_model.dart';
 import '../../../data/repositories/account_repository.dart';
 import '../../providers/accounts_provider.dart';
 import '../../providers/journal_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/settings_provider.dart' show AppSettings;
 
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(settingsProvider); // rebuild on locale/currency change
     final accountsAsync = ref.watch(accountsProvider);
-    final totalAsync = ref.watch(displayTotalBalanceProvider);
-    final mainCurrency = ref.watch(settingsProvider).currency;
+    final totalAsync = ref.watch(totalBalanceProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -57,7 +55,7 @@ class AccountsScreen extends ConsumerWidget {
                             fontSize: 30,
                             fontWeight: FontWeight.w700)),
                     error: (_, __) => const SizedBox(),
-                    data: (t) => Text(Fmt.money(t, currency: mainCurrency),
+                    data: (t) => Text(Fmt.money(t, currency: AppSettings.currency),
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 30,
@@ -79,7 +77,6 @@ class AccountsScreen extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (_, i) => _AccountCard(
                     account: accounts[i],
-                    mainCurrency: mainCurrency,
                     onDelete: () async {
                       await ref
                           .read(accountRepositoryProvider)
@@ -121,15 +118,12 @@ class AccountsScreen extends ConsumerWidget {
 
 class _AccountCard extends StatelessWidget {
   final AccountModel account;
-  final String mainCurrency;
   final VoidCallback? onDelete;
-  const _AccountCard(
-      {required this.account, required this.mainCurrency, this.onDelete});
+  const _AccountCard({required this.account, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final color = _parseColor(account.color);
-    final displayCurrency = account.currency ?? mainCurrency;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -159,19 +153,15 @@ class _AccountCard extends StatelessWidget {
                 Text(account.name,
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 15)),
-                Text(
-                  account.currency != null
-                      ? '${account.typeLabel} · 1 ${account.currency} = ${account.exchangeRate} $mainCurrency'
-                      : account.typeLabel,
-                  style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
-                ),
+                Text(account.typeLabel,
+                    style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(Fmt.money(account.balance, currency: displayCurrency),
+              Text(Fmt.money(account.balance, currency: AppSettings.currency),
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 16)),
               if (onDelete != null)
@@ -205,18 +195,7 @@ class _AddAccountSheet extends ConsumerStatefulWidget {
 class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
   final _nameCtrl = TextEditingController();
   final _balCtrl = TextEditingController();
-  final _rateCtrl = TextEditingController();
   String _type = 'debit';
-  String? _currency;
-
-  static const _currencies = [
-    ('₽', 'RUB', '🇷🇺 Рубль (₽)'),
-    ('\$', 'USD', '🇺🇸 Доллар (\$)'),
-    ('€', 'EUR', '🇪🇺 Евро (€)'),
-    ('£', 'GBP', '🇬🇧 Фунт (£)'),
-    ('¥', 'JPY', '🇯🇵 Иена (¥)'),
-    ('₸', 'KZT', '🇰🇿 Тенге (₸)'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -235,8 +214,7 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(L10n.newAccount,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           _label(L10n.name),
           TextField(
@@ -264,50 +242,6 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
               DropdownMenuItem(value: 'savings', child: Text(L10n.savings)),
             ],
           ),
-          const SizedBox(height: 12),
-          _label(L10n.currency),
-          Builder(builder: (context) {
-            final mainSymbol = ref.read(settingsProvider).currency;
-            final mainCode = ref.read(settingsProvider).currencyCode;
-            final mainLabel = _currencies.firstWhere(
-              (c) => c.$1 == mainSymbol,
-              orElse: () => (mainSymbol, mainCode, '$mainSymbol $mainCode'),
-            ).$3;
-            return DropdownButton<String?>(
-              value: _currency,
-              isExpanded: true,
-              underline: const Divider(color: AppColors.lineColor),
-              onChanged: (v) => setState(() => _currency = v),
-              items: [
-                DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text(
-                    '$mainLabel (основная)',
-                    style: const TextStyle(color: AppColors.inkSoft),
-                  ),
-                ),
-                ..._currencies
-                    .where((c) => c.$1 != mainSymbol)
-                    .map((c) => DropdownMenuItem<String?>(
-                          value: c.$1,
-                          child: Text(c.$3),
-                        )),
-              ],
-            );
-          }),
-          if (_currency != null) ...[
-            const SizedBox(height: 12),
-            Builder(builder: (ctx) {
-              final mainSymbol = ref.read(settingsProvider).currency;
-              return _label('Курс: 1 $_currency = ? $mainSymbol');
-            }),
-            TextField(
-              controller: _rateCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: _inputDec('Например: 90'),
-            ),
-          ],
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -321,22 +255,14 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
               ),
               onPressed: () async {
                 final name = _nameCtrl.text.trim();
-                final bal =
-                    double.tryParse(_balCtrl.text.replaceAll(',', '.')) ?? 0;
+                final bal = double.tryParse(_balCtrl.text.replaceAll(',', '.')) ?? 0;
                 if (name.isEmpty) return;
-                final rate = _currency != null
-                    ? (double.tryParse(
-                            _rateCtrl.text.replaceAll(',', '.')) ??
-                        1.0)
-                    : 1.0;
                 final model = AccountModel(
                   name: name,
                   type: _type,
                   balance: bal,
                   color: '#433DCB',
                   icon: name.isNotEmpty ? name[0].toUpperCase() : 'А',
-                  currency: _currency,
-                  exchangeRate: rate,
                   createdAt: DateTime.now(),
                 );
                 await ref.read(accountRepositoryProvider).insert(model);
@@ -344,8 +270,7 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
                 if (context.mounted) Navigator.pop(context);
               },
               child: Text(L10n.add,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ),
         ],

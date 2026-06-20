@@ -5,7 +5,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../providers/journal_provider.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/settings_provider.dart' show AppSettings;
 import '../../widgets/transaction_tile.dart';
 import 'add_transaction_sheet.dart';
 
@@ -16,8 +16,7 @@ class JournalScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(selectedMonthProvider);
     final txAsync = ref.watch(journalProvider);
-    final summaryAsync = ref.watch(displayMonthlySummaryProvider);
-    final currency = ref.watch(settingsProvider).currency;
+    final summaryAsync = ref.watch(monthlySummaryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,7 +54,6 @@ class JournalScreen extends ConsumerWidget {
               data: (s) => _SummaryCard(
                 income: s['income'] ?? 0,
                 expense: s['expense'] ?? 0,
-                currency: currency,
               ),
             ),
           ),
@@ -76,7 +74,7 @@ class JournalScreen extends ConsumerWidget {
                               _DateHeader(date: tx.date),
                             TransactionTile(
                               tx: tx,
-                              currency: tx.accountCurrency ?? currency,
+                              currency: AppSettings.currency,
                               onEdit: () async {
                                 final changed = await showModalBottomSheet<bool>(
                                   context: context,
@@ -131,8 +129,7 @@ class JournalScreen extends ConsumerWidget {
 class _SummaryCard extends StatelessWidget {
   final double income;
   final double expense;
-  final String currency;
-  const _SummaryCard({required this.income, required this.expense, required this.currency});
+  const _SummaryCard({required this.income, required this.expense});
 
   @override
   Widget build(BuildContext context) {
@@ -146,16 +143,15 @@ class _SummaryCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _SummaryItem(label: L10n.income, amount: income, color: AppColors.income, currency: currency),
+            child: _SummaryItem(label: L10n.income, amount: income, color: AppColors.income),
           ),
           Container(width: 1, height: 40, color: AppColors.lineColor),
           Expanded(
-            child: _SummaryItem(label: L10n.expenses, amount: expense, color: AppColors.expense, currency: currency),
+            child: _SummaryItem(label: L10n.expenses, amount: expense, color: AppColors.expense),
           ),
           Container(width: 1, height: 40, color: AppColors.lineColor),
           Expanded(
-            child: _SummaryItem(
-                label: L10n.balance, amount: income - expense, color: AppColors.inkDark, currency: currency),
+            child: _SummaryItem(label: L10n.balance, amount: income - expense, color: AppColors.inkDark),
           ),
         ],
       ),
@@ -167,8 +163,7 @@ class _SummaryItem extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  final String currency;
-  const _SummaryItem({required this.label, required this.amount, required this.color, required this.currency});
+  const _SummaryItem({required this.label, required this.amount, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +171,7 @@ class _SummaryItem extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
         const SizedBox(height: 4),
-        Text(Fmt.money(amount, currency: currency),
+        Text(Fmt.money(amount, currency: AppSettings.currency),
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
       ],
     );

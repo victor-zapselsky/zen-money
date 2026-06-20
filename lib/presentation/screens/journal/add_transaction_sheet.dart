@@ -9,7 +9,7 @@ import '../../../data/models/transaction_model.dart';
 import '../../../data/repositories/account_repository.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/repositories/transaction_repository.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/settings_provider.dart' show AppSettings;
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final TransactionModel? editTx;
@@ -36,15 +36,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
 
   bool get _isEdit => widget.editTx != null;
 
-  String get _currency {
-    if (_accountId != null && _accounts.isNotEmpty) {
-      try {
-        final acc = _accounts.firstWhere((a) => a.id == _accountId);
-        if (acc.currency != null && acc.currency!.isNotEmpty) return acc.currency!;
-      } catch (_) {}
-    }
-    return ref.read(settingsProvider).currency;
-  }
+  String get _currency => AppSettings.currency;
 
   @override
   void initState() {
@@ -297,9 +289,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
                             underline: const Divider(color: AppColors.lineColor),
                             items: _accounts.map((a) => DropdownMenuItem(
                               value: a.id,
-                              child: Text(a.currency != null
-                                  ? '${a.name} (${a.currency})'
-                                  : a.name),
+                              child: Text(a.name),
                             )).toList(),
                             onChanged: (v) => setState(() => _accountId = v),
                           ),

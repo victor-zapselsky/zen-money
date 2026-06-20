@@ -39,7 +39,7 @@ class TransactionRepository {
     final key = '${month.year}-${month.month.toString().padLeft(2,'0')}';
     final rows = await db.rawQuery('''
       SELECT t.type,
-             SUM(t.amount * COALESCE(a.exchange_rate, 1.0)) as total
+             SUM(t.amount) as total
       FROM transactions t
       LEFT JOIN accounts a ON a.id = t.account_id
       WHERE strftime('%Y-%m', t.date) = ?
@@ -58,7 +58,7 @@ class TransactionRepository {
     final key = '${month.year}-${month.month.toString().padLeft(2,'0')}';
     return db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color,
-             SUM(t.amount * COALESCE(a.exchange_rate, 1.0)) as total
+             SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       LEFT JOIN accounts a ON a.id = t.account_id
@@ -76,8 +76,8 @@ class TransactionRepository {
         '${cutoff.year}-${cutoff.month.toString().padLeft(2, '0')}-${cutoff.day.toString().padLeft(2, '0')}';
     return db.rawQuery('''
       SELECT strftime('%Y-%m-%d', t.date) as day,
-             SUM(CASE WHEN t.type='income'  THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as income,
-             SUM(CASE WHEN t.type='expense' THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as expense
+             SUM(CASE WHEN t.type='income'  THEN t.amount ELSE 0 END) as income,
+             SUM(CASE WHEN t.type='expense' THEN t.amount ELSE 0 END) as expense
       FROM transactions t
       LEFT JOIN accounts a ON a.id = t.account_id
       WHERE date(t.date) >= ?
@@ -112,8 +112,8 @@ class TransactionRepository {
         '${start.year}-${start.month.toString().padLeft(2, '0')}';
     return db.rawQuery('''
       SELECT strftime('%Y-%m', t.date) as month,
-             SUM(CASE WHEN t.type='income'  THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as income,
-             SUM(CASE WHEN t.type='expense' THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as expense
+             SUM(CASE WHEN t.type='income'  THEN t.amount ELSE 0 END) as income,
+             SUM(CASE WHEN t.type='expense' THEN t.amount ELSE 0 END) as expense
       FROM transactions t
       LEFT JOIN accounts a ON a.id = t.account_id
       WHERE strftime('%Y-%m', t.date) >= ?
@@ -126,8 +126,8 @@ class TransactionRepository {
     final db = await _db.database;
     return db.rawQuery('''
       SELECT strftime('%Y', t.date) as year,
-             SUM(CASE WHEN t.type='income'  THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as income,
-             SUM(CASE WHEN t.type='expense' THEN t.amount * COALESCE(a.exchange_rate, 1.0) ELSE 0 END) as expense
+             SUM(CASE WHEN t.type='income'  THEN t.amount ELSE 0 END) as income,
+             SUM(CASE WHEN t.type='expense' THEN t.amount ELSE 0 END) as expense
       FROM transactions t
       LEFT JOIN accounts a ON a.id = t.account_id
       GROUP BY year
