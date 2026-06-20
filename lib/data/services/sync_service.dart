@@ -31,6 +31,16 @@ class SyncService {
     }
   }
 
+  /// Deletes all user data from Supabase (except categories).
+  static Future<void> clearCloudData() async {
+    if (!AuthService.isLoggedIn) return;
+    final userId = AuthService.currentUser!.id;
+    const toDelete = ['transactions', 'budgets', 'goals', 'accounts'];
+    for (final table in toDelete) {
+      await _sb.from(table).delete().eq('user_id', userId);
+    }
+  }
+
   /// Pulls cloud data for this user into local SQLite (replaces local data).
   static Future<bool> pullFromCloud(DatabaseHelper dbHelper) async {
     if (!AuthService.isLoggedIn) return false;

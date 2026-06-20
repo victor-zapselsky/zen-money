@@ -234,6 +234,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (confirmed != true || !mounted) return;
 
     await ref.read(databaseHelperProvider).clearAllData();
+    await SyncService.clearCloudData();
     ref.invalidate(accountsProvider);
     ref.invalidate(totalBalanceProvider);
     ref.invalidate(journalProvider);
