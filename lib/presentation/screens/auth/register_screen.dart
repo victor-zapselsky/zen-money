@@ -1,8 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/services/analytics_service.dart';
 import '../../../data/services/auth_service.dart';
@@ -21,7 +23,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passCtrl = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  bool _agreed = false;
   String? _error;
+
+  static const _privacyUrl =
+      'https://victor-zapselsky.github.io/zen-money/legal/privacy_policy.html';
+  static const _termsUrl =
+      'https://victor-zapselsky.github.io/zen-money/legal/terms.html';
 
   @override
   void dispose() {
@@ -29,6 +37,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> _register() async {
@@ -43,6 +58,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _error = 'Пароль должен быть не менее 6 символов');
       return;
     }
+    if (!_agreed) {
+      setState(() => _error = 'Примите пользовательское соглашение и политику конфиденциальности');
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
@@ -54,7 +73,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         name: name.isEmpty ? null : name,
       );
       if (res.session == null) {
-        // Email confirmation required
         if (mounted) {
           setState(() => _loading = false);
           showDialog(
@@ -116,12 +134,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             _field('Email', _emailCtrl, type: TextInputType.emailAddress),
             const SizedBox(height: 16),
             _passwordField(),
+            const SizedBox(height: 20),
+            _agreementRow(),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(_error!,
                   style: const TextStyle(color: AppColors.expense, fontSize: 13)),
             ],
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             AppButton(
               label: _loading ? 'Создаём аккаунт...' : 'Создать аккаунт',
               onTap: _loading ? null : _register,
@@ -142,6 +162,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _agreementRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: _agreed,
+          onChanged: (v) => setState(() => _agreed = v ?? false),
+          activeColor: AppColors.primary,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text.rich(
+              TextSpan(
+                style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
+                children: [
+                  const TextSpan(text: 'Я принимаю '),
+                  TextSpan(
+                    text: 'пользовательское соглашение',
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => _openUrl(_termsUrl),
+                  ),
+                  const TextSpan(text: ' и '),
+                  TextSpan(
+                    text: 'политику конфиденциальности',
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => _openUrl(_privacyUrl),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
