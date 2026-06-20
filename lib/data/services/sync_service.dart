@@ -6,8 +6,17 @@ import 'auth_service.dart';
 class SyncService {
   static SupabaseClient get _sb => Supabase.instance.client;
 
-  // Order matters: categories/accounts before transactions (FK deps)
-  static const _tables = [
+  // Order matters: accounts before transactions (FK deps)
+  // Categories are excluded from push — they use integer IDs seeded locally,
+  // causing RLS conflicts when multiple users share the same IDs on upsert.
+  static const _pushTables = [
+    'accounts',
+    'transactions',
+    'budgets',
+    'goals',
+  ];
+
+  static const _pullTables = [
     'categories',
     'accounts',
     'transactions',
@@ -21,7 +30,7 @@ class SyncService {
     final userId = AuthService.currentUser!.id;
     final db = await dbHelper.database;
 
-    for (final table in _tables) {
+    for (final table in _pushTables) {
       final rows = await db.query(table);
       if (rows.isEmpty) continue;
       final records = rows
@@ -48,7 +57,7 @@ class SyncService {
     final db = await dbHelper.database;
 
     bool hadData = false;
-    for (final table in _tables) {
+    for (final table in _pullTables) {
       final List<dynamic> records =
           await _sb.from(table).select().eq('user_id', userId);
       if (records.isEmpty) continue;

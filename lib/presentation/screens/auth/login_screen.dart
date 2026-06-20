@@ -61,10 +61,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _loading = false;
         _error = e.message;
       });
-    } catch (_) {
+    } catch (e) {
       setState(() {
         _loading = false;
-        _error = 'Произошла ошибка. Проверьте соединение.';
+        _error = 'Произошла ошибка: $e';
       });
     }
   }
