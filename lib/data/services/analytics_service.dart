@@ -1,40 +1,36 @@
+import 'package:appmetrica_plugin/appmetrica_plugin.dart';
 import 'package:flutter/foundation.dart';
-import 'package:appmetrica_sdk/appmetrica_sdk.dart';
 
 class AnalyticsService {
-  // Получить API Key на appmetrica.yandex.ru → Приложения → Ключ API
   static const _apiKey = 'fbead890-a3f1-4713-a056-c56f106d94f1';
 
-  static final _sdk = AppmetricaSdk();
-
   static Future<void> init() async {
-    await _sdk.activate(apiKey: _apiKey, crashReporting: true);
+    try {
+      await AppMetrica.activate(AppMetricaConfig(_apiKey, crashReporting: true));
+    } catch (e) {
+      debugPrint('[Analytics] init error: $e');
+    }
   }
 
-  static Future<void> _send(String name, [Map<String, dynamic>? params]) async {
+  static Future<void> _send(String name, [Map<String, Object>? params]) async {
     try {
-      await _sdk.reportEvent(name: name, attributes: params);
-      await _sdk.sendEventsBuffer();
+      if (params != null) {
+        await AppMetrica.reportEventWithMap(name, params);
+      } else {
+        await AppMetrica.reportEvent(name);
+      }
     } catch (e) {
       debugPrint('[Analytics] error sending "$name": $e');
     }
   }
 
-  // ── User events ────────────────────────────────────────────────────────────
-
-  static Future<void> transactionCreated({
-    required String type,
-    required double amount,
-  }) =>
-      _send('transaction_created', {
-        'type': type,
-        'amount_bucket': _bucket(amount),
-      });
+  static Future<void> transactionCreated({required String type, required double amount}) =>
+      _send('transaction_created', <String, Object>{'type': type, 'amount_bucket': _bucket(amount)});
 
   static Future<void> transactionDeleted() => _send('transaction_deleted');
 
   static Future<void> accountCreated({required String type}) =>
-      _send('account_created', {'type': type});
+      _send('account_created', <String, Object>{'type': type});
 
   static Future<void> budgetCreated() => _send('budget_created');
 
@@ -42,12 +38,8 @@ class AnalyticsService {
 
   static Future<void> userRegister() => _send('user_register');
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
-
   static Future<void> screenViewed(String screen) =>
-      _send('screen_viewed', {'screen': screen});
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
+      _send('screen_viewed', <String, Object>{'screen': screen});
 
   static String _bucket(double amount) {
     if (amount < 100) return '<100';

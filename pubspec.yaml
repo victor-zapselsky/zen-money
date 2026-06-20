@@ -36,13 +36,11 @@ dependencies:
   uuid: ^4.4.0
   path: ^1.9.0
 
-  # Analytics
-  appmetrica_sdk: ^0.0.7+1
-
   # Profile features
   image_picker: ^1.1.2
   url_launcher: ^6.3.0
   in_app_review: ^2.0.9
+  appmetrica_plugin: ^4.0.0
 
 dev_dependencies:
   flutter_test:
