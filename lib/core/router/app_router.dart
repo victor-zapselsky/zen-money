@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/register_screen.dart';
+import '../../presentation/screens/auth/forgot_password_screen.dart';
+import '../../presentation/screens/auth/reset_password_screen.dart';
 import '../../presentation/screens/shell/main_shell.dart';
 import '../../presentation/screens/journal/journal_screen.dart';
 import '../../presentation/screens/accounts/accounts_screen.dart';
@@ -31,6 +33,14 @@ GoRouter buildRouter() {
       GoRoute(
         path: '/register',
         builder: (_, __) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (_, __) => const ResetPasswordScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellKey,

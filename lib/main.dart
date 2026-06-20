@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -48,16 +49,25 @@ class ZenMoneyApp extends ConsumerStatefulWidget {
 class _ZenMoneyAppState extends ConsumerState<ZenMoneyApp>
     with WidgetsBindingObserver {
   late final _router = buildRouter();
+  StreamSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pullIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pullIfNeeded();
+      _authSub = AuthService.authStateChanges.listen((state) {
+        if (state.event == AuthChangeEvent.passwordRecovery) {
+          _router.go('/reset-password');
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    _authSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

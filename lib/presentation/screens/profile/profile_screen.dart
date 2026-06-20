@@ -439,6 +439,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         fontSize: 13, color: AppColors.inkSoft),
                   ),
                 ],
+                if (isLoggedIn && !AuthService.isEmailVerified) ...[
+                  const SizedBox(height: 10),
+                  _EmailVerificationBanner(email: AuthService.userEmail ?? ''),
+                ],
                 if (!isLoggedIn) ...[
                   const SizedBox(height: 4),
                   TextButton(
@@ -686,6 +690,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         onChanged: onChanged,
         activeThumbColor: AppColors.primary,
         activeTrackColor: AppColors.primaryGhost,
+      ),
+    );
+  }
+}
+
+class _EmailVerificationBanner extends StatefulWidget {
+  final String email;
+  const _EmailVerificationBanner({required this.email});
+
+  @override
+  State<_EmailVerificationBanner> createState() =>
+      _EmailVerificationBannerState();
+}
+
+class _EmailVerificationBannerState extends State<_EmailVerificationBanner> {
+  bool _sent = false;
+  bool _loading = false;
+
+  Future<void> _resend() async {
+    setState(() => _loading = true);
+    try {
+      await AuthService.resendVerificationEmail();
+      if (mounted) setState(() => _sent = true);
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFD966), width: 1),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              color: Color(0xFFB45309), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _sent ? 'Письмо отправлено' : 'Email не подтверждён',
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF92400E),
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          if (!_sent)
+            GestureDetector(
+              onTap: _loading ? null : _resend,
+              child: Text(
+                _loading ? '...' : 'Отправить',
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF92400E),
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline),
+              ),
+            ),
+        ],
       ),
     );
   }

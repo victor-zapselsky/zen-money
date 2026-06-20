@@ -72,21 +72,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _resetPassword() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty) {
-      setState(() => _error = 'Введите email для сброса пароля');
-      return;
-    }
-    try {
-      await AuthService.resetPassword(email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Письмо для сброса пароля отправлено')),
-        );
-      }
-    } catch (_) {}
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: _resetPassword,
+                onPressed: () => context.push('/forgot-password'),
                 child: const Text('Забыли пароль?',
                     style: TextStyle(color: AppColors.primary)),
               ),

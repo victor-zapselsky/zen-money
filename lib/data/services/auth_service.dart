@@ -27,8 +27,19 @@ class AuthService {
         data: name != null ? {'full_name': name} : null,
       );
 
+  static bool get isEmailVerified => currentUser?.emailConfirmedAt != null;
+
   static Future<void> signOut() => _sb.auth.signOut();
 
   static Future<void> resetPassword(String email) =>
-      _sb.auth.resetPasswordForEmail(email);
+      _sb.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'kubushka://auth-callback',
+      );
+
+  static Future<void> resendVerificationEmail() =>
+      _sb.auth.resend(type: OtpType.signup, email: userEmail!);
+
+  static Future<void> updatePassword(String newPassword) =>
+      _sb.auth.updateUser(UserAttributes(password: newPassword));
 }
