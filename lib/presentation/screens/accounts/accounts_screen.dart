@@ -257,7 +257,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           _label(L10n.name),
           TextField(
             controller: _nameCtrl,
-            maxLength: 30,
+            maxLength: 15,
             decoration: _inputDec('Карта / Наличные'),
           ),
           const SizedBox(height: 4),
