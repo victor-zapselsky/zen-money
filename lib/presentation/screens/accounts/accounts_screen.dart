@@ -78,6 +78,8 @@ class AccountsScreen extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (_, i) => _AccountCard(
                     account: accounts[i],
+                    onEdit: () => _showAddAccount(context, ref,
+                        account: accounts[i]),
                     onDelete: () async {
                       await ref
                           .read(accountRepositoryProvider)
@@ -104,23 +106,30 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddAccount(BuildContext context, WidgetRef ref) {
+  void _showAddAccount(BuildContext context, WidgetRef ref,
+      {AccountModel? account}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _AddAccountSheet(onSaved: () {
-        ref.invalidate(accountsProvider);
-        ref.invalidate(totalBalanceProvider);
-      }),
+      builder: (_) => _AccountSheet(
+        account: account,
+        onSaved: () {
+          ref.invalidate(accountsProvider);
+          ref.invalidate(totalBalanceProvider);
+          ref.invalidate(journalProvider);
+          ref.invalidate(monthlySummaryProvider);
+        },
+      ),
     );
   }
 }
 
 class _AccountCard extends StatelessWidget {
   final AccountModel account;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-  const _AccountCard({required this.account, this.onDelete});
+  const _AccountCard({required this.account, this.onEdit, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -165,13 +174,29 @@ class _AccountCard extends StatelessWidget {
               Text(Fmt.compact(account.balance, currency: AppSettings.currency),
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 16)),
-              if (onDelete != null)
-                GestureDetector(
-                  onTap: onDelete,
-                  child: Text(L10n.delete,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppColors.inkSoft)),
-                ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onEdit != null)
+                    GestureDetector(
+                      onTap: onEdit,
+                      child: Text(L10n.edit,
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.primary)),
+                    ),
+                  if (onEdit != null && onDelete != null)
+                    const Text(' · ',
+                        style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                  if (onDelete != null)
+                    GestureDetector(
+                      onTap: onDelete,
+                      child: Text(L10n.delete,
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.inkSoft)),
+                    ),
+                ],
+              ),
             ],
           ),
         ],
@@ -185,18 +210,30 @@ class _AccountCard extends StatelessWidget {
   }
 }
 
-class _AddAccountSheet extends ConsumerStatefulWidget {
+class _AccountSheet extends ConsumerStatefulWidget {
+  final AccountModel? account;
   final VoidCallback onSaved;
-  const _AddAccountSheet({required this.onSaved});
+  const _AccountSheet({this.account, required this.onSaved});
 
   @override
-  ConsumerState<_AddAccountSheet> createState() => _AddAccountSheetState();
+  ConsumerState<_AccountSheet> createState() => _AccountSheetState();
 }
 
-class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
-  final _nameCtrl = TextEditingController();
-  final _balCtrl = TextEditingController();
-  String _type = 'debit';
+class _AccountSheetState extends ConsumerState<_AccountSheet> {
+  late final _nameCtrl = TextEditingController(
+      text: widget.account?.name ?? '');
+  late final _balCtrl = TextEditingController(
+      text: widget.account != null ? widget.account!.balance.toString() : '');
+  late String _type = widget.account?.type ?? 'debit';
+
+  bool get _isEditing => widget.account != null;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _balCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,22 +251,24 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(L10n.newAccount,
+          Text(_isEditing ? L10n.editAccount : L10n.newAccount,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           _label(L10n.name),
           TextField(
             controller: _nameCtrl,
+            maxLength: 30,
             decoration: _inputDec('Карта / Наличные'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           _label(L10n.initialBalance),
           TextField(
             controller: _balCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            maxLength: 12,
             decoration: _inputDec('0'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           _label(L10n.type),
           DropdownButton<String>(
             value: _type,
@@ -256,22 +295,35 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
               ),
               onPressed: () async {
                 final name = _nameCtrl.text.trim();
-                final bal = double.tryParse(_balCtrl.text.replaceAll(',', '.')) ?? 0;
+                final bal = double.tryParse(
+                        _balCtrl.text.replaceAll(',', '.')) ??
+                    0;
                 if (name.isEmpty) return;
-                final model = AccountModel(
-                  name: name,
-                  type: _type,
-                  balance: bal,
-                  color: '#433DCB',
-                  icon: name.isNotEmpty ? name[0].toUpperCase() : 'А',
-                  createdAt: DateTime.now(),
-                );
-                await ref.read(accountRepositoryProvider).insert(model);
-                AnalyticsService.accountCreated(type: _type);
+                final repo = ref.read(accountRepositoryProvider);
+                if (_isEditing) {
+                  final updated = widget.account!.copyWith(
+                    name: name,
+                    type: _type,
+                    balance: bal,
+                    icon: name[0].toUpperCase(),
+                  );
+                  await repo.update(updated);
+                } else {
+                  final model = AccountModel(
+                    name: name,
+                    type: _type,
+                    balance: bal,
+                    color: '#433DCB',
+                    icon: name[0].toUpperCase(),
+                    createdAt: DateTime.now(),
+                  );
+                  await repo.insert(model);
+                  AnalyticsService.accountCreated(type: _type);
+                }
                 widget.onSaved();
                 if (context.mounted) Navigator.pop(context);
               },
-              child: Text(L10n.add,
+              child: Text(_isEditing ? L10n.save : L10n.add,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ),
@@ -294,5 +346,6 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
             borderSide: BorderSide.none),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        counterText: '',
       );
 }

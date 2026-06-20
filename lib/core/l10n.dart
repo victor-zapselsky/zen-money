@@ -48,6 +48,7 @@ class L10n {
   static String get accounts      => _ru ? 'Счета'           : 'Accounts';
   static String get totalBalance  => _ru ? 'Общий баланс'    : 'Total balance';
   static String get newAccount    => _ru ? 'Новый счёт'      : 'New account';
+  static String get editAccount   => _ru ? 'Редактировать счёт' : 'Edit account';
   static String get initialBalance => _ru ? 'Начальный баланс' : 'Initial balance';
   static String get debitCard     => _ru ? 'Дебетовая карта' : 'Debit card';
   static String get cash          => _ru ? 'Наличные'        : 'Cash';
