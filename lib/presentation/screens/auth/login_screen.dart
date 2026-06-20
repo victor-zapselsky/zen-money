@@ -47,11 +47,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await AuthService.signIn(email, pass);
       final dbHelper = ref.read(databaseHelperProvider);
-      // Push local data first so it gets associated with the account
-      await SyncService.pushToCloud(dbHelper);
-      // Then pull to merge with any existing cloud data
+      await dbHelper.clearAllData();
       await SyncService.pullFromCloud(dbHelper);
-      // Refresh non-autoDispose providers so UI shows the pulled data
       ref.invalidate(journalProvider);
       ref.invalidate(monthlySummaryProvider);
       AnalyticsService.userLogin();

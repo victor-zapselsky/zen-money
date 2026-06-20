@@ -199,6 +199,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _logout() async {
     await AuthService.signOut();
     await ref.read(settingsProvider.notifier).setSyncEnabled(false);
+    await ref.read(databaseHelperProvider).clearAllData();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('onboarded');
     await prefs.remove('profile_photo');
