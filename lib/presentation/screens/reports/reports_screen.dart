@@ -553,7 +553,7 @@ class _CategoryRow extends StatelessWidget {
                       child: Text(name,
                           style: const TextStyle(
                               fontWeight: FontWeight.w500, fontSize: 14))),
-                  Text(Fmt.money(amount, currency: currency),
+                  Text(Fmt.compact(amount, currency: currency),
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 14)),
                 ]),

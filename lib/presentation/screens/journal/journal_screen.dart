@@ -173,7 +173,7 @@ class _SummaryItem extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
         const SizedBox(height: 4),
-        Text(Fmt.money(amount, currency: AppSettings.currency),
+        Text(Fmt.compact(amount, currency: AppSettings.currency),
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
       ],
     );

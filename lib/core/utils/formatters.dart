@@ -22,6 +22,24 @@ class Formatters {
     _dayMonth  = DateFormat('d MMMM', locale);
   }
 
+  static String compact(double amount, {String currency = '₽'}) {
+    final abs = amount.abs();
+    final neg = amount < 0 ? '−' : '';
+
+    String abbr(double v, String suffix) {
+      final r = (v * 10).round() / 10;
+      final s = r == r.truncateToDouble()
+          ? r.toInt().toString()
+          : r.toStringAsFixed(1);
+      return '$neg$s$suffix $currency';
+    }
+
+    if (abs >= 1e9) return abbr(abs / 1e9, 'млрд');
+    if (abs >= 1e6) return abbr(abs / 1e6, 'млн');
+    if (abs >= 10000) return abbr(abs / 1000, 'к');
+    return money(amount, currency: currency);
+  }
+
   static String money(double amount, {bool signed = false, String currency = '₽'}) {
     final formatted = _money.format(amount.abs());
     if (signed) {

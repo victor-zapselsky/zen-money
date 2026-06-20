@@ -56,7 +56,7 @@ class AccountsScreen extends ConsumerWidget {
                             fontSize: 30,
                             fontWeight: FontWeight.w700)),
                     error: (_, __) => const SizedBox(),
-                    data: (t) => Text(Fmt.money(t, currency: AppSettings.currency),
+                    data: (t) => Text(Fmt.compact(t, currency: AppSettings.currency),
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 30,
@@ -162,7 +162,7 @@ class _AccountCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(Fmt.money(account.balance, currency: AppSettings.currency),
+              Text(Fmt.compact(account.balance, currency: AppSettings.currency),
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 16)),
               if (onDelete != null)

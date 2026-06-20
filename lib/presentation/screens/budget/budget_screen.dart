@@ -167,13 +167,13 @@ class _TotalCard extends StatelessWidget {
               children: [
                 Text(L10n.totalBudget,
                     style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
-                Text(Fmt.money(limit, currency: currency),
+                Text(Fmt.compact(limit, currency: currency),
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
               ],
             )),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text(L10n.remaining, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
-              Text(Fmt.money(remaining, currency: currency),
+              Text(Fmt.compact(remaining, currency: currency),
                   style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -183,7 +183,7 @@ class _TotalCard extends StatelessWidget {
           const SizedBox(height: 12),
           ProgressBar(value: limit > 0 ? spent / limit : 0),
           const SizedBox(height: 6),
-          Text(L10n.spentOf(Fmt.money(spent, currency: currency), Fmt.money(limit, currency: currency)),
+          Text(L10n.spentOf(Fmt.compact(spent, currency: currency), Fmt.compact(limit, currency: currency)),
               style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
         ],
       ),
@@ -236,10 +236,10 @@ class _BudgetCard extends StatelessWidget {
                 ProgressBar(value: budget.percent / 100),
                 const SizedBox(height: 6),
                 Row(children: [
-                  Text(Fmt.money(budget.spentAmount, currency: currency),
+                  Text(Fmt.compact(budget.spentAmount, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                   const Spacer(),
-                  Text(Fmt.money(budget.limitAmount, currency: currency),
+                  Text(Fmt.compact(budget.limitAmount, currency: currency),
                       style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
                 ]),
               ],
