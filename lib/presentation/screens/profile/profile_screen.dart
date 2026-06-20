@@ -201,6 +201,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await ref.read(settingsProvider.notifier).setSyncEnabled(false);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('onboarded');
+    await prefs.remove('profile_photo');
+    await prefs.remove('profile_name');
     if (mounted) context.go('/onboarding');
   }
 
