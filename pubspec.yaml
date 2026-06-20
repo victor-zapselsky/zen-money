@@ -36,6 +36,9 @@ dependencies:
   uuid: ^4.4.0
   path: ^1.9.0
 
+  # Analytics
+  appmetrica_sdk: ^0.0.7+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

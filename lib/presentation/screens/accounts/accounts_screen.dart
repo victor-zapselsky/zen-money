@@ -5,6 +5,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/account_model.dart';
 import '../../../data/repositories/account_repository.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../providers/accounts_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/settings_provider.dart' show AppSettings;
@@ -266,6 +267,7 @@ class _AddAccountSheetState extends ConsumerState<_AddAccountSheet> {
                   createdAt: DateTime.now(),
                 );
                 await ref.read(accountRepositoryProvider).insert(model);
+                AnalyticsService.accountCreated(type: _type);
                 widget.onSaved();
                 if (context.mounted) Navigator.pop(context);
               },

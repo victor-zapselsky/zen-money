@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/database/database_helper.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/sync_service.dart';
 import '../../providers/journal_provider.dart';
@@ -53,6 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Refresh non-autoDispose providers so UI shows the pulled data
       ref.invalidate(journalProvider);
       ref.invalidate(monthlySummaryProvider);
+      AnalyticsService.userLogin();
       await ref.read(settingsProvider.notifier).setLastSyncAt(DateTime.now());
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('onboarded', true);

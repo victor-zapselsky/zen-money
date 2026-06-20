@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme/colors.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../providers/settings_provider.dart';
 
 class MainShell extends ConsumerWidget {
@@ -55,7 +56,10 @@ class MainShell extends ConsumerWidget {
         unselectedFontSize: 11,
         backgroundColor: AppColors.surface,
         elevation: 8,
-        onTap: (i) => context.go(_paths[i]),
+        onTap: (i) {
+          AnalyticsService.screenViewed(_paths[i].replaceFirst('/', ''));
+          context.go(_paths[i]);
+        },
         items: List.generate(
           _paths.length,
           (i) => BottomNavigationBarItem(

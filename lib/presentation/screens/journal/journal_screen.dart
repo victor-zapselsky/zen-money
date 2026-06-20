@@ -4,6 +4,7 @@ import '../../../core/l10n.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/repositories/transaction_repository.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/settings_provider.dart' show AppSettings;
 import '../../widgets/transaction_tile.dart';
@@ -89,6 +90,7 @@ class JournalScreen extends ConsumerWidget {
                               },
                               onDelete: () async {
                                 await ref.read(transactionRepositoryProvider).delete(tx.id!);
+                                AnalyticsService.transactionDeleted();
                                 ref.invalidate(journalProvider);
                                 ref.invalidate(monthlySummaryProvider);
                               },

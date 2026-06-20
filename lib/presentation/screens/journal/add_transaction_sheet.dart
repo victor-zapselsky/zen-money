@@ -9,6 +9,7 @@ import '../../../data/models/transaction_model.dart';
 import '../../../data/repositories/account_repository.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/repositories/transaction_repository.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../providers/settings_provider.dart' show AppSettings;
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
@@ -128,6 +129,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet>
       await ref.read(transactionRepositoryProvider).insert(tx);
     }
 
+    if (!_isEdit) {
+      AnalyticsService.transactionCreated(type: _type, amount: amount);
+    }
     if (mounted) Navigator.of(context).pop(true);
   }
 

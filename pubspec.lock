@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  appmetrica_sdk:
+    dependency: "direct main"
+    description:
+      name: appmetrica_sdk
+      sha256: c413e8546a92d4c766da4892ebbe54d0752599e75197510269f665f7bacd8447
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.7+1"
   archive:
     dependency: transitive
     description:

@@ -7,6 +7,7 @@ import '../../../data/models/budget_model.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/repositories/budget_repository.dart';
 import '../../../data/repositories/category_repository.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/settings_provider.dart' show AppSettings;
@@ -332,6 +333,7 @@ class _AddBudgetSheetState extends ConsumerState<_AddBudgetSheet> {
       year: month.year,
     );
     await ref.read(budgetRepositoryProvider).insert(budget);
+    AnalyticsService.budgetCreated();
     widget.onSaved();
     if (mounted) Navigator.of(context).pop();
   }

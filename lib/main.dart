@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/database/database_helper.dart';
+import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/sync_service.dart';
 import 'presentation/providers/journal_provider.dart';
@@ -23,6 +24,8 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+
+  await AnalyticsService.init();
 
   await Supabase.initialize(
     url: 'https://khztwlbojttzudjoibxm.supabase.co',

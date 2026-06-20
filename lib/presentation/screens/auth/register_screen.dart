@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/colors.dart';
+import '../../../data/services/analytics_service.dart';
 import '../../../data/services/auth_service.dart';
 import '../../widgets/app_button.dart';
 
@@ -76,6 +77,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
         return;
       }
+      AnalyticsService.userRegister();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('onboarded', true);
       if (mounted) context.go('/journal');
