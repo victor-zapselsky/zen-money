@@ -42,11 +42,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('profile_name');
+    final photo = prefs.getString('profile_photo');
     if (mounted) {
       setState(() {
-        _localName = prefs.getString('profile_name');
-        _photoPath = prefs.getString('profile_photo');
+        _localName = name;
+        _photoPath = photo;
       });
+    }
+    // Если фото нет локально и пользователь залогинен — тянем из облака
+    final hasLocal = photo != null && File(photo).existsSync();
+    if (!hasLocal && AuthService.isLoggedIn) {
+      await _downloadAvatarFromCloud();
+    }
+  }
+
+  Future<void> _uploadAvatarToCloud(File file) async {
+    if (!AuthService.isLoggedIn) return;
+    final userId = AuthService.currentUser!.id;
+    try {
+      final bytes = await file.readAsBytes();
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .uploadBinary(
+            '$userId/avatar.jpg',
+            bytes,
+            fileOptions: const FileOptions(upsert: true, contentType: 'image/jpeg'),
+          );
+    } catch (e) {
+      debugPrint('[Profile] avatar upload failed: $e');
+    }
+  }
+
+  Future<void> _downloadAvatarFromCloud() async {
+    if (!AuthService.isLoggedIn) return;
+    final userId = AuthService.currentUser!.id;
+    try {
+      final bytes = await Supabase.instance.client.storage
+          .from('avatars')
+          .download('$userId/avatar.jpg');
+      final dir = await getApplicationDocumentsDirectory();
+      final dest = File('${dir.path}/profile_avatar.jpg');
+      await dest.writeAsBytes(bytes);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_photo', dest.path);
+      if (mounted) setState(() => _photoPath = dest.path);
+    } catch (_) {
+      // Фото в облаке ещё нет — это нормально
     }
   }
 
@@ -110,6 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('profile_photo', dest.path);
     if (mounted) setState(() => _photoPath = dest.path);
+    await _uploadAvatarToCloud(dest);
   }
 
   // ── Sync ────────────────────────────────────────────────────────────────────
