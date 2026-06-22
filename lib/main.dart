@@ -29,11 +29,11 @@ void main() async {
   await AnalyticsService.init();
 
   await Supabase.initialize(
-    url: 'https://khztwlbojttzudjoibxm.supabase.co',
+    url: 'http://81.19.135.87:8000',
     // ignore: deprecated_member_use
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
-        '.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoenR3bGJvanR0enVkam9pYnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1OTY2MjcsImV4cCI6MjA5MzE3MjYyN30'
-        '.a6bzs_InHPevQ8nDVoDjjSGnAeMLgEULwbhjc2e42zE',
+        '.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ4NzcyMDAwLCJleHAiOjI2ODU1NDg0MDB9'
+        '.QZ9I-Qz2U1rlgB-CcSTaGigE92uA9ngW137h_fLIcF0',
   );
 
   runApp(const ProviderScope(child: ZenMoneyApp()));
