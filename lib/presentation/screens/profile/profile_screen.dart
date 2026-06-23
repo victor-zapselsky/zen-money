@@ -212,6 +212,61 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (mounted) context.go('/onboarding');
   }
 
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить аккаунт?'),
+        content: const Text(
+            'Все данные, включая счета, транзакции и историю, будут удалены безвозвратно.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.expense,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await SyncService.clearCloudData();
+      final userId = AuthService.currentUser!.id;
+      try {
+        await Supabase.instance.client.storage
+            .from('avatars')
+            .remove(['$userId/avatar.jpg']);
+      } catch (_) {}
+      await Supabase.instance.client.rpc('delete_user');
+      await ref.read(settingsProvider.notifier).setSyncEnabled(false);
+      await ref.read(databaseHelperProvider).clearAllData();
+      ref.invalidate(journalProvider);
+      ref.invalidate(monthlySummaryProvider);
+      ref.invalidate(accountsProvider);
+      ref.invalidate(totalBalanceProvider);
+      ref.invalidate(budgetProvider);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('onboarded');
+      await prefs.remove('profile_photo');
+      await prefs.remove('profile_name');
+      if (mounted) context.go('/onboarding');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка удаления аккаунта: $e')),
+        );
+      }
+    }
+  }
+
   // ── Data management ────────────────────────────────────────────────────────
 
   Future<void> _clearData() async {
@@ -447,9 +502,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         fontSize: 13, color: AppColors.inkSoft),
                   ),
                 ],
-                if (isLoggedIn && user?.emailConfirmedAt == null) ...[
+                if (isLoggedIn && user.emailConfirmedAt == null) ...[
                   const SizedBox(height: 10),
-                  _EmailVerificationBanner(email: user?.email ?? ''),
+                  _EmailVerificationBanner(email: user.email ?? ''),
                 ],
                 if (!isLoggedIn) ...[
                   const SizedBox(height: 4),
@@ -516,28 +571,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ]),
                 const SizedBox(height: 24),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: OutlinedButton(
-                    onPressed: _logout,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.lineColor),
-                      foregroundColor: AppColors.inkSoft,
-                      backgroundColor: AppColors.surface,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Center(
-                        child: Text(L10n.logout,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600)),
+                if (isLoggedIn) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: OutlinedButton(
+                      onPressed: _logout,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.lineColor),
+                        foregroundColor: AppColors.inkSoft,
+                        backgroundColor: AppColors.surface,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: Text(L10n.logout,
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: OutlinedButton(
+                      onPressed: _deleteAccount,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.expense.withValues(alpha: 0.4)),
+                        foregroundColor: AppColors.expense,
+                        backgroundColor: AppColors.surface,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: Text(L10n.deleteAccount,
+                              style: const TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 40),
               ],
             ),

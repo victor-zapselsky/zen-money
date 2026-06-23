@@ -106,4 +106,5 @@ class L10n {
   static String get rateApp        => _ru ? 'Оценить приложение' : 'Rate the app';
   static String get contactUs      => _ru ? 'Написать нам'       : 'Contact us';
   static String get logout         => _ru ? 'Выйти'              : 'Sign out';
+  static String get deleteAccount  => _ru ? 'Удалить аккаунт'   : 'Delete account';
 }
