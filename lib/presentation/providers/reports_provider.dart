@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/transaction_repository.dart';
-import 'journal_provider.dart';
 
 enum ReportPeriod { days, weeks, months, years }
 enum ReportType { total, income, expense }
@@ -8,10 +7,44 @@ enum ReportType { total, income, expense }
 final reportPeriodProvider = StateProvider<ReportPeriod>((ref) => ReportPeriod.months);
 final reportTypeProvider   = StateProvider<ReportType>((ref)   => ReportType.expense);
 
+String defaultKeyForPeriod(ReportPeriod period) {
+  final now = DateTime.now();
+  switch (period) {
+    case ReportPeriod.days:
+      return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    case ReportPeriod.weeks:
+      final mon = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+      return '${mon.year}-${mon.month.toString().padLeft(2, '0')}-${mon.day.toString().padLeft(2, '0')}';
+    case ReportPeriod.months:
+      return '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    case ReportPeriod.years:
+      return '${now.year}';
+  }
+}
+
+final selectedPeriodKeyProvider = StateProvider<String>((ref) {
+  return defaultKeyForPeriod(ReportPeriod.months);
+});
+
 final categorySpendingProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
-  final month = ref.watch(selectedMonthProvider);
-  return ref.watch(transactionRepositoryProvider).getCategorySpending(month);
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final period = ref.watch(reportPeriodProvider);
+  final key    = ref.watch(selectedPeriodKeyProvider);
+  final repo   = ref.watch(transactionRepositoryProvider);
+
+  switch (period) {
+    case ReportPeriod.days:
+      return repo.getCategorySpendingByDay(key);
+    case ReportPeriod.weeks:
+      return repo.getCategorySpendingByWeek(key);
+    case ReportPeriod.months:
+      final parts = key.split('-');
+      if (parts.length < 2) return [];
+      final month = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+      return repo.getCategorySpending(month);
+    case ReportPeriod.years:
+      return repo.getCategorySpendingByYear(key);
+  }
 });
 
 final chartDataProvider =

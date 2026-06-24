@@ -135,6 +135,53 @@ class TransactionRepository {
     ''');
   }
 
+  Future<List<Map<String, dynamic>>> getCategorySpendingByDay(String day) async {
+    final db = await _db.database;
+    return db.rawQuery('''
+      SELECT c.id, c.name, c.icon, c.color,
+             SUM(t.amount) as total
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.type = 'expense'
+        AND strftime('%Y-%m-%d', t.date) = ?
+      GROUP BY c.id
+      ORDER BY total DESC
+    ''', [day]);
+  }
+
+  Future<List<Map<String, dynamic>>> getCategorySpendingByWeek(String weekStart) async {
+    final db = await _db.database;
+    final start = DateTime.tryParse(weekStart);
+    if (start == null) return [];
+    final end = start.add(const Duration(days: 6));
+    final endStr = '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}';
+    return db.rawQuery('''
+      SELECT c.id, c.name, c.icon, c.color,
+             SUM(t.amount) as total
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.type = 'expense'
+        AND strftime('%Y-%m-%d', t.date) >= ?
+        AND strftime('%Y-%m-%d', t.date) <= ?
+      GROUP BY c.id
+      ORDER BY total DESC
+    ''', [weekStart, endStr]);
+  }
+
+  Future<List<Map<String, dynamic>>> getCategorySpendingByYear(String year) async {
+    final db = await _db.database;
+    return db.rawQuery('''
+      SELECT c.id, c.name, c.icon, c.color,
+             SUM(t.amount) as total
+      FROM transactions t
+      JOIN categories c ON c.id = t.category_id
+      WHERE t.type = 'expense'
+        AND strftime('%Y', t.date) = ?
+      GROUP BY c.id
+      ORDER BY total DESC
+    ''', [year]);
+  }
+
   Future<int> insert(TransactionModel t) async {
     final db = await _db.database;
     final id = await db.insert('transactions', t.toMap());

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/utils/formatters.dart';
-import '../../providers/journal_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/settings_provider.dart' show AppSettings;
 import '../../widgets/category_avatar.dart';
@@ -15,12 +14,12 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final period     = ref.watch(reportPeriodProvider);
-    final type       = ref.watch(reportTypeProvider);
-    final chartAsync = ref.watch(chartDataProvider);
-    final catAsync   = ref.watch(categorySpendingProvider);
-    const currency   = AppSettings.currency;
-    final month      = ref.watch(selectedMonthProvider);
+    final period      = ref.watch(reportPeriodProvider);
+    final type        = ref.watch(reportTypeProvider);
+    final chartAsync  = ref.watch(chartDataProvider);
+    final catAsync    = ref.watch(categorySpendingProvider);
+    const currency    = AppSettings.currency;
+    final selectedKey = ref.watch(selectedPeriodKeyProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,6 +59,10 @@ class ReportsScreen extends ConsumerWidget {
                             data: data,
                             period: period,
                             type: type,
+                            selectedKey: selectedKey,
+                            onKeySelected: (key) => ref
+                                .read(selectedPeriodKeyProvider.notifier)
+                                .state = key,
                           ),
                         ),
                       ),
@@ -84,7 +87,7 @@ class ReportsScreen extends ConsumerWidget {
                                     fontWeight: FontWeight.w700,
                                     fontSize: 15)),
                           ),
-                          _MonthNav(month: month),
+                          const _PeriodNav(),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -190,8 +193,11 @@ class _Filters extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () =>
-                        ref.read(reportPeriodProvider.notifier).state = p,
+                    onTap: () {
+                      ref.read(reportPeriodProvider.notifier).state = p;
+                      ref.read(selectedPeriodKeyProvider.notifier).state =
+                          defaultKeyForPeriod(p);
+                    },
                     child: _FilterChip(label: label, selected: sel),
                   ),
                 );
@@ -231,31 +237,91 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-// ─── Month nav ────────────────────────────────────────────────────────────────
+// ─── Period nav ───────────────────────────────────────────────────────────────
 
-class _MonthNav extends ConsumerWidget {
-  final DateTime month;
-  const _MonthNav({required this.month});
+class _PeriodNav extends ConsumerWidget {
+  const _PeriodNav();
+
+  static const _monthNames = [
+    '', 'янв', 'фев', 'мар', 'апр', 'май', 'июн',
+    'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+  ];
+
+  static String _fmtKey(ReportPeriod period, String key) {
+    final now = DateTime.now();
+    switch (period) {
+      case ReportPeriod.days:
+        final d = DateTime.tryParse(key);
+        if (d == null) return key;
+        final s = Fmt.dayMonth(d);
+        return d.year != now.year ? '$s ${d.year}' : s;
+      case ReportPeriod.weeks:
+        final start = DateTime.tryParse(key);
+        if (start == null) return key;
+        final end = start.add(const Duration(days: 6));
+        final sm = _monthNames[start.month];
+        final em = _monthNames[end.month];
+        final yr = end.year != now.year ? ' ${end.year}' : '';
+        if (start.month == end.month) {
+          return '${start.day}–${end.day} $em$yr';
+        }
+        return '${start.day} $sm – ${end.day} $em$yr';
+      case ReportPeriod.months:
+        final parts = key.split('-');
+        if (parts.length < 2) return key;
+        final d = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+        return Fmt.monthYear(d);
+      case ReportPeriod.years:
+        return key;
+    }
+  }
+
+  static String _shiftKey(ReportPeriod period, String key, int delta) {
+    switch (period) {
+      case ReportPeriod.days:
+        final d = DateTime.tryParse(key);
+        if (d == null) return key;
+        final nd = d.add(Duration(days: delta));
+        return '${nd.year}-${nd.month.toString().padLeft(2, '0')}-${nd.day.toString().padLeft(2, '0')}';
+      case ReportPeriod.weeks:
+        final d = DateTime.tryParse(key);
+        if (d == null) return key;
+        final nd = d.add(Duration(days: delta * 7));
+        return '${nd.year}-${nd.month.toString().padLeft(2, '0')}-${nd.day.toString().padLeft(2, '0')}';
+      case ReportPeriod.months:
+        final parts = key.split('-');
+        if (parts.length < 2) return key;
+        final nd = DateTime(int.parse(parts[0]), int.parse(parts[1]) + delta);
+        return '${nd.year}-${nd.month.toString().padLeft(2, '0')}';
+      case ReportPeriod.years:
+        final y = int.tryParse(key) ?? DateTime.now().year;
+        return '${y + delta}';
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final period = ref.watch(reportPeriodProvider);
+    final key    = ref.watch(selectedPeriodKeyProvider);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: () => ref.read(selectedMonthProvider.notifier).state =
-              DateTime(month.year, month.month - 1),
+          onTap: () => ref.read(selectedPeriodKeyProvider.notifier).state =
+              _shiftKey(period, key, -1),
           child: const Icon(Icons.chevron_left,
               color: AppColors.inkDark, size: 20),
         ),
-        Text(Fmt.monthYear(month),
-            style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13)),
+        Text(
+          _fmtKey(period, key),
+          style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13),
+        ),
         GestureDetector(
-          onTap: () => ref.read(selectedMonthProvider.notifier).state =
-              DateTime(month.year, month.month + 1),
+          onTap: () => ref.read(selectedPeriodKeyProvider.notifier).state =
+              _shiftKey(period, key, 1),
           child: const Icon(Icons.chevron_right,
               color: AppColors.inkDark, size: 20),
         ),
@@ -314,10 +380,15 @@ class _BarChartSection extends StatelessWidget {
   final List<Map<String, dynamic>> data;
   final ReportPeriod period;
   final ReportType type;
+  final String selectedKey;
+  final ValueChanged<String> onKeySelected;
+
   const _BarChartSection({
     required this.data,
     required this.period,
     required this.type,
+    required this.selectedKey,
+    required this.onKeySelected,
   });
 
   static const _monthAbbr = [
@@ -357,15 +428,21 @@ class _BarChartSection extends StatelessWidget {
       labelEvery = 2;
     }
 
+    final hasMatch = data.any((r) => _keyForRow(r, period) == selectedKey);
+
     final groups = data.asMap().entries.map((e) {
       final inc = (e.value['income'] as num? ?? 0).toDouble();
       final exp = (e.value['expense'] as num? ?? 0).toDouble();
       final rods = <BarChartRodData>[];
 
+      final rowKey    = _keyForRow(e.value, period);
+      final isSelected = !hasMatch || rowKey == selectedKey;
+      final alpha     = isSelected ? 1.0 : 0.28;
+
       if (type == ReportType.total || type == ReportType.income) {
         rods.add(BarChartRodData(
           toY: inc,
-          color: AppColors.income,
+          color: AppColors.income.withValues(alpha: alpha),
           width: barW,
           borderRadius:
               const BorderRadius.vertical(top: Radius.circular(4)),
@@ -373,7 +450,7 @@ class _BarChartSection extends StatelessWidget {
               ? BackgroundBarChartRodData(
                   show: true,
                   toY: effectiveMax,
-                  color: AppColors.income.withValues(alpha: 0.06),
+                  color: AppColors.income.withValues(alpha: isSelected ? 0.06 : 0.02),
                 )
               : BackgroundBarChartRodData(show: false),
         ));
@@ -381,7 +458,7 @@ class _BarChartSection extends StatelessWidget {
       if (type == ReportType.total || type == ReportType.expense) {
         rods.add(BarChartRodData(
           toY: exp,
-          color: AppColors.expense,
+          color: AppColors.expense.withValues(alpha: alpha),
           width: barW,
           borderRadius:
               const BorderRadius.vertical(top: Radius.circular(4)),
@@ -389,7 +466,7 @@ class _BarChartSection extends StatelessWidget {
               ? BackgroundBarChartRodData(
                   show: true,
                   toY: effectiveMax,
-                  color: AppColors.expense.withValues(alpha: 0.06),
+                  color: AppColors.expense.withValues(alpha: isSelected ? 0.06 : 0.02),
                 )
               : BackgroundBarChartRodData(show: false),
         ));
@@ -412,6 +489,13 @@ class _BarChartSection extends StatelessWidget {
             groupsSpace: isDouble ? 8 : 6,
             barGroups: groups,
             barTouchData: BarTouchData(
+              touchCallback: (event, response) {
+                if (!event.isInterestedForInteractions) return;
+                final index = response?.spot?.touchedBarGroupIndex;
+                if (index != null && index >= 0 && index < data.length) {
+                  onKeySelected(_keyForRow(data[index], period));
+                }
+              },
               touchTooltipData: BarTouchTooltipData(
                 getTooltipColor: (_) => AppColors.inkDark,
                 getTooltipItem: (group, _, rod, rodIndex) {
@@ -490,6 +574,15 @@ class _BarChartSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _keyForRow(Map<String, dynamic> row, ReportPeriod period) {
+    switch (period) {
+      case ReportPeriod.days:    return row['day'] as String? ?? '';
+      case ReportPeriod.weeks:   return row['week_start'] as String? ?? '';
+      case ReportPeriod.months:  return row['month'] as String? ?? '';
+      case ReportPeriod.years:   return row['year'] as String? ?? '';
+    }
   }
 
   static String _getLabel(Map<String, dynamic> row, ReportPeriod period) {
