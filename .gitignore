@@ -48,9 +48,10 @@ app.*.map.json
 /android/app/release
 android/build/
 
-# Keystore — не хранить в репозитории
+# Keystore и пароли — не хранить в репозитории
 *.jks
 *.keystore
+android/key.properties
 
 # Screenshots and photos
 *.png
