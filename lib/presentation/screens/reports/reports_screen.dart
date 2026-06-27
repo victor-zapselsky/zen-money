@@ -103,7 +103,7 @@ class ReportsScreen extends ConsumerWidget {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 24),
                                 child: Center(
-                                  child: Text(L10n.noExpenses,
+                                  child: Text(L10n.noData,
                                       style: const TextStyle(
                                           color: AppColors.inkSoft)),
                                 ),

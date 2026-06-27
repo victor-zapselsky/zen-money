@@ -233,7 +233,7 @@ class _BudgetCard extends StatelessWidget {
                     ),
                 ]),
                 const SizedBox(height: 8),
-                ProgressBar(value: budget.percent / 100),
+                ProgressBar(value: budget.percent),
                 const SizedBox(height: 6),
                 Row(children: [
                   Text(Fmt.compact(budget.spentAmount, currency: currency),

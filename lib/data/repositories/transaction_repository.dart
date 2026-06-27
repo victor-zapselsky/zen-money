@@ -53,17 +53,18 @@ class TransactionRepository {
     return {'income': income, 'expense': expense};
   }
 
-  Future<List<Map<String, dynamic>>> getCategorySpending(DateTime month) async {
+  Future<List<Map<String, dynamic>>> getCategorySpending(DateTime month, {String? type}) async {
     final db = await _db.database;
     final key = '${month.year}-${month.month.toString().padLeft(2,'0')}';
+    final typeClause = type != null ? "AND t.type = '$type'" : '';
     return db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color,
              SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       LEFT JOIN accounts a ON a.id = t.account_id
-      WHERE t.type = 'expense'
-        AND strftime('%Y-%m', t.date) = ?
+      WHERE strftime('%Y-%m', t.date) = ?
+        $typeClause
       GROUP BY c.id
       ORDER BY total DESC
     ''', [key]);
@@ -135,48 +136,51 @@ class TransactionRepository {
     ''');
   }
 
-  Future<List<Map<String, dynamic>>> getCategorySpendingByDay(String day) async {
+  Future<List<Map<String, dynamic>>> getCategorySpendingByDay(String day, {String? type}) async {
     final db = await _db.database;
+    final typeClause = type != null ? "AND t.type = '$type'" : '';
     return db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color,
              SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
-      WHERE t.type = 'expense'
-        AND strftime('%Y-%m-%d', t.date) = ?
+      WHERE strftime('%Y-%m-%d', t.date) = ?
+        $typeClause
       GROUP BY c.id
       ORDER BY total DESC
     ''', [day]);
   }
 
-  Future<List<Map<String, dynamic>>> getCategorySpendingByWeek(String weekStart) async {
+  Future<List<Map<String, dynamic>>> getCategorySpendingByWeek(String weekStart, {String? type}) async {
     final db = await _db.database;
     final start = DateTime.tryParse(weekStart);
     if (start == null) return [];
     final end = start.add(const Duration(days: 6));
     final endStr = '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}';
+    final typeClause = type != null ? "AND t.type = '$type'" : '';
     return db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color,
              SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
-      WHERE t.type = 'expense'
-        AND strftime('%Y-%m-%d', t.date) >= ?
+      WHERE strftime('%Y-%m-%d', t.date) >= ?
         AND strftime('%Y-%m-%d', t.date) <= ?
+        $typeClause
       GROUP BY c.id
       ORDER BY total DESC
     ''', [weekStart, endStr]);
   }
 
-  Future<List<Map<String, dynamic>>> getCategorySpendingByYear(String year) async {
+  Future<List<Map<String, dynamic>>> getCategorySpendingByYear(String year, {String? type}) async {
     final db = await _db.database;
+    final typeClause = type != null ? "AND t.type = '$type'" : '';
     return db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color,
              SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
-      WHERE t.type = 'expense'
-        AND strftime('%Y', t.date) = ?
+      WHERE strftime('%Y', t.date) = ?
+        $typeClause
       GROUP BY c.id
       ORDER BY total DESC
     ''', [year]);

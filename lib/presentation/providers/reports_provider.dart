@@ -28,22 +28,29 @@ final selectedPeriodKeyProvider = StateProvider<String>((ref) {
 
 final categorySpendingProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final period = ref.watch(reportPeriodProvider);
-  final key    = ref.watch(selectedPeriodKeyProvider);
-  final repo   = ref.watch(transactionRepositoryProvider);
+  final period   = ref.watch(reportPeriodProvider);
+  final key      = ref.watch(selectedPeriodKeyProvider);
+  final type     = ref.watch(reportTypeProvider);
+  final repo     = ref.watch(transactionRepositoryProvider);
+
+  final typeFilter = type == ReportType.income
+      ? 'income'
+      : type == ReportType.expense
+          ? 'expense'
+          : null; // null = total (both)
 
   switch (period) {
     case ReportPeriod.days:
-      return repo.getCategorySpendingByDay(key);
+      return repo.getCategorySpendingByDay(key, type: typeFilter);
     case ReportPeriod.weeks:
-      return repo.getCategorySpendingByWeek(key);
+      return repo.getCategorySpendingByWeek(key, type: typeFilter);
     case ReportPeriod.months:
       final parts = key.split('-');
       if (parts.length < 2) return [];
       final month = DateTime(int.parse(parts[0]), int.parse(parts[1]));
-      return repo.getCategorySpending(month);
+      return repo.getCategorySpending(month, type: typeFilter);
     case ReportPeriod.years:
-      return repo.getCategorySpendingByYear(key);
+      return repo.getCategorySpendingByYear(key, type: typeFilter);
   }
 });
 
