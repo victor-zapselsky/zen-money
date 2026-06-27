@@ -1,4 +1,4 @@
-package com.example.kubushka
+package com.example.kopilka
 
 import io.flutter.embedding.android.FlutterActivity
 

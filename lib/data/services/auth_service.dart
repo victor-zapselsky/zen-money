@@ -34,7 +34,7 @@ class AuthService {
   static Future<void> resetPassword(String email) =>
       _sb.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'kubushka://auth-callback',
+        redirectTo: 'kopilka://auth-callback',
       );
 
   static Future<void> resendVerificationEmail() =>

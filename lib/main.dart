@@ -93,7 +93,7 @@ class _ZenMoneyAppState extends ConsumerState<ZenMoneyApp>
     final settings = ref.watch(settingsProvider);
     final locale = settings.locale == 'en' ? const Locale('en') : const Locale('ru');
     return MaterialApp.router(
-      title: 'Дзен Мани',
+      title: 'Копилка',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
