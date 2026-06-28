@@ -27,9 +27,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _error;
 
   static const _privacyUrl =
-      'https://victor-zapselsky.github.io/zen-money/legal/privacy_policy.html';
+      'https://victor-zapselsky.github.io/zen-money/privacy_policy.html';
   static const _termsUrl =
-      'https://victor-zapselsky.github.io/zen-money/legal/terms.html';
+      'https://victor-zapselsky.github.io/zen-money/terms.html';
 
   @override
   void dispose() {
