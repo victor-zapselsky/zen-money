@@ -1,4 +1,4 @@
-package com.example.kopilka
+package ru.kopilka.app
 
 import io.flutter.embedding.android.FlutterActivity
 

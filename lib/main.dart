@@ -95,8 +95,7 @@ class _ZenMoneyAppState extends ConsumerState<ZenMoneyApp>
     return MaterialApp.router(
       title: 'Копилка',
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: settings.themeMode,
+      themeMode: ThemeMode.light,
       locale: locale,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,

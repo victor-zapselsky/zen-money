@@ -12,7 +12,7 @@ val keyPropertiesFile = rootProject.file("../android/key.properties")
 if (keyPropertiesFile.exists()) keyProperties.load(keyPropertiesFile.inputStream())
 
 android {
-    namespace = "com.example.kopilka"
+    namespace = "ru.kopilka.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -35,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.kopilka"
+        applicationId = "ru.kopilka.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
