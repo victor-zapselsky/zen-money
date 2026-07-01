@@ -36,11 +36,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await AuthService.resetPassword(email);
       if (mounted) setState(() => _sent = true);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = 'Произошла ошибка. Проверьте соединение.';
+          _error = AuthService.describeError(e);
         });
       }
     }

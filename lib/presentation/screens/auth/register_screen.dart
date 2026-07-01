@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/services/analytics_service.dart';
@@ -99,15 +98,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('onboarded', true);
       if (mounted) context.go('/journal');
-    } on AuthException catch (e) {
+    } catch (e) {
       setState(() {
         _loading = false;
-        _error = e.message;
-      });
-    } catch (_) {
-      setState(() {
-        _loading = false;
-        _error = 'Произошла ошибка. Проверьте соединение.';
+        _error = AuthService.describeError(e);
       });
     }
   }

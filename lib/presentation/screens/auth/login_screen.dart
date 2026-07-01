@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/database/database_helper.dart';
 import '../../../data/services/analytics_service.dart';
@@ -46,27 +45,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     try {
       await AuthService.signIn(email, pass);
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = AuthService.describeError(e);
+      });
+      return;
+    }
+
+    // Auth succeeded — cloud sync is best-effort and must not block login.
+    try {
       final dbHelper = ref.read(databaseHelperProvider);
       await SyncService.pushToCloud(dbHelper);
       await SyncService.pullFromCloud(dbHelper);
       ref.invalidate(journalProvider);
       ref.invalidate(monthlySummaryProvider);
-      AnalyticsService.userLogin();
       await ref.read(settingsProvider.notifier).setLastSyncAt(DateTime.now());
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('onboarded', true);
-      if (mounted) context.go('/journal');
-    } on AuthException catch (e) {
-      setState(() {
-        _loading = false;
-        _error = e.message;
-      });
-    } catch (e) {
-      setState(() {
-        _loading = false;
-        _error = 'Произошла ошибка: $e';
-      });
+    } catch (_) {
+      // Sync failures shouldn't prevent an authenticated user from entering the app.
     }
+    AnalyticsService.userLogin();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarded', true);
+    if (mounted) context.go('/journal');
   }
 
 

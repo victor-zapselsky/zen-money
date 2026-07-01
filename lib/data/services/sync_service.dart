@@ -36,7 +36,11 @@ class SyncService {
       final records = rows
           .map((r) => {...Map<String, dynamic>.from(r), 'user_id': userId})
           .toList();
-      await _sb.from(table).upsert(records);
+      // Local ids are per-device autoincrement integers, so two different
+      // users can generate the same id. Conflict must be resolved per-user
+      // (id, user_id), not by id alone — requires a matching unique
+      // constraint on (id, user_id) in Postgres for each table below.
+      await _sb.from(table).upsert(records, onConflict: 'id,user_id');
     }
   }
 

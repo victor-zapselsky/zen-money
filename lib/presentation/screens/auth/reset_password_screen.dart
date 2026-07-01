@@ -55,7 +55,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = 'Ошибка: $e';
+          _error = AuthService.describeError(e);
         });
       }
     }
