@@ -29,7 +29,7 @@ void main() async {
   await AnalyticsService.init();
 
   await Supabase.initialize(
-    url: 'http://81.19.135.87:8000',
+    url: 'https://81-19-135-87.sslip.io',
     // ignore: deprecated_member_use
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
         '.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ4NzcyMDAwLCJleHAiOjI2ODU1NDg0MDB9'
