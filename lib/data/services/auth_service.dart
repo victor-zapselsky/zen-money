@@ -25,6 +25,7 @@ class AuthService {
         email: email,
         password: password,
         data: name != null ? {'full_name': name} : null,
+        emailRedirectTo: 'kopilka://auth-callback',
       );
 
   static bool get isEmailVerified => currentUser?.emailConfirmedAt != null;
