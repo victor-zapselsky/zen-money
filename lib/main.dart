@@ -12,8 +12,10 @@ import 'data/database/database_helper.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/auth_service.dart';
 import 'data/services/sync_service.dart';
+import 'data/services/update_gate_service.dart';
 import 'presentation/providers/journal_provider.dart';
 import 'presentation/providers/settings_provider.dart';
+import 'presentation/screens/update_required_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +37,12 @@ void main() async {
         '.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ4NzcyMDAwLCJleHAiOjI2ODU1NDg0MDB9'
         '.QZ9I-Qz2U1rlgB-CcSTaGigE92uA9ngW137h_fLIcF0',
   );
+
+  final updateGate = await UpdateGateService.check();
+  if (updateGate.updateRequired) {
+    runApp(UpdateRequiredApp(message: updateGate.message));
+    return;
+  }
 
   runApp(const ProviderScope(child: ZenMoneyApp()));
 }

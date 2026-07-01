@@ -1,7 +1,7 @@
 name: kopilka
 description: Копилка — умный помощник для финансов
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -35,6 +35,7 @@ dependencies:
   intl: ^0.19.0
   uuid: ^4.4.0
   path: ^1.9.0
+  package_info_plus: ^8.0.0
 
   # Profile features
   image_picker: ^1.1.2
